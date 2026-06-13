@@ -1,0 +1,26 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// This file is intentionally empty.
+//
+// The schema has been split into per-model files using Prisma's
+// multi-file schema feature (prismaSchemaFolder — Prisma 5.16+).
+//
+// All schema files live in:  prisma/schema/
+//
+//   _base.prisma         datasource + generator + all enums
+//   user.prisma          User
+//   property.prisma      Property + Favorite
+//   lead.prisma          Lead
+//   document.prisma      UserDocument
+//   construction.prisma  ConstructionUpdate (Phase 2)
+//   service.prisma       Service + UserSubscription + ServiceTicket
+//   escrow.prisma        EscrowTransaction
+//   b2b.prisma           B2BConnection (Phase 2)
+//   video.prisma         VideoTourRequest (Phase 2)
+//   cms.prisma           ContentBlock
+//   notification.prisma  Notification
+//   audit.prisma         AuditLog
+//   contact.prisma       ContactMessage
+//
+// Prisma reads the folder automatically because package.json contains:
+//   "prisma": { "schema": "prisma/schema" }
+// ─────────────────────────────────────────────────────────────────────────────

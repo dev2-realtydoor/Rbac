@@ -1,0 +1,23 @@
+// ─── B2B BROKER NETWORK (Phase 2) ─────────────────────────────────────────────
+// Hidden inventory visible only to verified Partners.
+// Admin monitors all connections to detect offline bypass attempts (PRD §2.3).
+
+model B2BConnection {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  listingPartnerId String   @db.ObjectId
+  listingPartner   User     @relation("ListingPartner", fields: [listingPartnerId], references: [id])
+  buyerPartnerId   String   @db.ObjectId
+  buyerPartner     User     @relation("BuyerPartner", fields: [buyerPartnerId], references: [id])
+  propertyId       String   @db.ObjectId
+  property         Property @relation(fields: [propertyId], references: [id])
+  status           B2BConnectionStatus @default(INTERESTED)
+  message          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([buyerPartnerId, propertyId])
+  @@index([listingPartnerId])
+  @@index([buyerPartnerId])
+  @@index([propertyId])
+  @@index([status])
+}

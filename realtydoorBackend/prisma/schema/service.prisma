@@ -1,0 +1,77 @@
+// ─── SERVICE CATALOG ──────────────────────────────────────────────────────────
+// Post-purchase services sold to users (MVP revenue stream 1).
+// category: MAINTENANCE | CONSTRUCTION | LEGAL | LOAN | VALUATION
+
+model Service {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  shortDesc   String
+  description String
+  price       Float
+  category    String
+  features    String[]
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subscriptions UserSubscription[]
+}
+
+// ─── USER SUBSCRIPTION ────────────────────────────────────────────────────────
+// Created when a user buys a service. Activated via Razorpay payment.captured webhook.
+
+model UserSubscription {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String   @db.ObjectId
+  user              User     @relation(fields: [userId], references: [id])
+  serviceId         String   @db.ObjectId
+  service           Service  @relation(fields: [serviceId], references: [id])
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String?
+  paymentStatus     PaymentStatus @default(PENDING)
+  amountPaid        Float
+  currency          String   @default("INR")
+  startDate         DateTime @default(now())
+  endDate           DateTime
+
+  tickets ServiceTicket[]
+
+  @@index([userId])
+  @@index([userId, paymentStatus])
+}
+
+// ─── SERVICE TICKET ───────────────────────────────────────────────────────────
+// Raised by user under an active subscription. Resolved by Admin-dispatched vendor.
+// User must mark VERIFIED_BY_USER to close (PRD Pattern 15 / Leakage 4).
+
+model ServiceTicket {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String           @db.ObjectId
+  user           User             @relation(fields: [userId], references: [id])
+  subscriptionId String           @db.ObjectId
+  subscription   UserSubscription @relation(fields: [subscriptionId], references: [id])
+  subject        String
+  description    String
+  // category: PLUMBING | ELECTRICAL | PAINTING | GENERAL
+  category       String?
+  status         TicketStatus     @default(OPEN)
+  // priority: NORMAL | HIGH | URGENT
+  priority       String           @default("NORMAL")
+  adminNotes     String?
+  resolutionUrls String[]
+  vendorName     String?
+  vendorPhone    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  resolvedAt     DateTime?
+  verifiedAt     DateTime?
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([status, createdAt])
+  @@index([userId, status])
+  @@index([subscriptionId, status])
+}

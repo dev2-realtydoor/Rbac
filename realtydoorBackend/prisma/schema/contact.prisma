@@ -1,0 +1,20 @@
+// ─── CONTACT MESSAGE ──────────────────────────────────────────────────────────
+// General contact form submissions from the public portal.
+// userId / role are set when the sender is authenticated.
+
+model ContactMessage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  userId    String?  @db.ObjectId
+  user      User?    @relation(fields: [userId], references: [id])
+  role      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@index([userId])
+}

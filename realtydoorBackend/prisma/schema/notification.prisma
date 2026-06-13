@@ -1,0 +1,24 @@
+// ─── NOTIFICATION ─────────────────────────────────────────────────────────────
+// In-app notifications for all roles.
+// type examples: LEAD_NEW | LEAD_ASSIGNED | PROPERTY_APPROVED | PROPERTY_REJECTED |
+//   KYC_PENDING | KYC_UPDATE | DEAL_CLOSED | ESCROW_REFUNDED | SERVICE_ACTIVATED | ANNOUNCEMENT
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  linkUrl   String?
+  channel   String?
+  metadata  String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+}

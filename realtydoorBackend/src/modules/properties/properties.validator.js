@@ -1,0 +1,58 @@
+const { z } = require('zod');
+const { paginationSchema } = require('../../utils/validators');
+
+const createPropertySchema = z.object({
+  title: z.string().min(5).max(200),
+  description: z.string().min(20),
+  price: z.number().positive().optional(),
+  monthlyRent: z.number().positive().optional(),
+  priceNegotiable: z.boolean().optional(),
+  propertyType: z.enum(['FLAT', 'INDEPENDENT_HOUSE', 'VILLA', 'PLOT', 'COMMERCIAL_OFFICE', 'RETAIL_SHOP']),
+  listingType: z.enum(['SALE', 'RENT', 'LEASE']),
+  propertyStatus: z.enum(['READY_TO_MOVE', 'UNDER_CONSTRUCTION']).optional(),
+  bhk: z.number().int().min(1).max(10).optional(),
+  bathrooms: z.number().int().min(1).optional(),
+  carpetArea: z.number().positive().optional(),
+  builtUpArea: z.number().positive().optional(),
+  plotArea: z.number().positive().optional(),
+  floorNumber: z.number().int().min(0).optional(),
+  totalFloors: z.number().int().min(1).optional(),
+  ageOfProperty: z.number().int().min(0).optional(),
+  furnishing: z.string().optional(),
+  facing: z.string().optional(),
+  possessionDate: z.string().datetime().optional(),
+  address: z.string().min(5),
+  locality: z.string().min(2),
+  city: z.string().min(2),
+  state: z.string().min(2),
+  pincode: z.string().regex(/^\d{6}$/),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+  nearbyLandmarks: z.array(z.string()).optional(),
+  reraNumber: z.string().optional(),
+  bankApprovals: z.array(z.string()).optional(),
+  amenities: z.array(z.string()).optional(),
+  societyFeatures: z.array(z.string()).optional(),
+  metaTitle: z.string().max(60).optional(),
+  metaDescription: z.string().max(160).optional(),
+});
+
+const searchSchema = paginationSchema.extend({
+  q: z.string().optional(),
+  city: z.string().optional(),
+  locality: z.string().optional(),
+  propertyType: z.string().optional(),
+  listingType: z.string().optional(),
+  bhk: z.coerce.number().int().optional(),
+  minPrice: z.coerce.number().optional(),
+  maxPrice: z.coerce.number().optional(),
+  minArea: z.coerce.number().optional(),
+  maxArea: z.coerce.number().optional(),
+  furnishing: z.string().optional(),
+  propertyStatus: z.string().optional(),
+  isVerified: z.coerce.boolean().optional(),
+  amenities: z.string().optional(),
+  sort: z.enum(['price_asc', 'price_desc', 'newest', 'area_asc']).optional(),
+});
+
+module.exports = { createPropertySchema, searchSchema };

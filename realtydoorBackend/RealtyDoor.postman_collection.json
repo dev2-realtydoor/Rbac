@@ -1,0 +1,2103 @@
+{
+  "info": {
+    "_postman_id": "realtydoor-api-v1",
+    "name": "RealtyDoor API v1.0",
+    "description": "RealtyDoor platform API — Indian real estate lead-gen. Base URL: http://localhost:5000. Set authToken variable to your Clerk JWT.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",        "value": "http://localhost:5000" },
+    { "key": "authToken",      "value": "" },
+    { "key": "propertyId",     "value": "664abc123def456789012345" },
+    { "key": "propertySlug",   "value": "skyline-heights-3bhk-baner-1717000000000", "description": "Update from seed output — slugs include Date.now()" },
+    { "key": "leadId",         "value": "665def456abc789012345678" },
+    { "key": "partnerId",      "value": "6a1a3213aa8de854e8acfad7", "description": "From seed output — run: npm run db:seed" },
+    { "key": "userId",         "value": "6a1a3213aa8de854e8acfad8", "description": "From seed output — run: npm run db:seed" },
+    { "key": "escrowId",       "value": "66bbb111ccc222ddd333eee4" },
+    { "key": "serviceId",      "value": "668ccc333ddd444eee555fff" },
+    { "key": "subscriptionId", "value": "667bbb222ccc333ddd444eee" },
+    { "key": "ticketId",       "value": "669ddd444eee555fff666aaa" },
+    { "key": "contentId",      "value": "66ddd444eee555fff666aaab" },
+    { "key": "notificationId",    "value": "66eee555fff666aaa777bbb1" },
+    { "key": "adminToken",        "value": "" },
+    { "key": "adminId",           "value": "6a1a3213aa8de854e8acfad6", "description": "From seed output — run: npm run db:seed" },
+    { "key": "loanId",            "value": "" },
+    { "key": "localityInsightId", "value": "" },
+    { "key": "targetUserId",      "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{authToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "Search Properties",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/properties?city=Pune&listingType=SALE&page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","properties"],
+              "query": [
+                { "key": "q",              "value": "",          "disabled": true },
+                { "key": "city",           "value": "Pune" },
+                { "key": "locality",       "value": "",          "disabled": true },
+                { "key": "propertyType",   "value": "",          "disabled": true },
+                { "key": "listingType",    "value": "SALE" },
+                { "key": "bhk",            "value": "",          "disabled": true },
+                { "key": "minPrice",       "value": "",          "disabled": true },
+                { "key": "maxPrice",       "value": "",          "disabled": true },
+                { "key": "furnishing",     "value": "",          "disabled": true },
+                { "key": "propertyStatus", "value": "",          "disabled": true },
+                { "key": "isVerified",     "value": "",          "disabled": true },
+                { "key": "amenities",      "value": "",          "disabled": true },
+                { "key": "sort",           "value": "",          "disabled": true },
+                { "key": "page",           "value": "1" },
+                { "key": "limit",          "value": "20" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Search Results",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0001" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"price\":8500000,\"monthlyRent\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"bhk\":3,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"coverImageIndex\":0,\"isVerified\":true,\"isFeatured\":true,\"reraNumber\":\"P52100012345\",\"createdAt\":\"2026-05-01T10:00:00.000Z\"}],\"pagination\":{\"total\":4,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+            }
+          ]
+        },
+        {
+          "name": "Featured Listings",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/properties/featured", "host": ["{{baseUrl}}"], "path": ["api","properties","featured"] }
+          },
+          "response": [
+            {
+              "name": "200 – Featured",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0002" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"bhk\":3,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"isVerified\":true,\"isFeatured\":true}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Property by Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/properties/{{propertySlug}}", "host": ["{{baseUrl}}"], "path": ["api","properties","{{propertySlug}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Property Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0003" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"description\":\"Spacious 3 BHK apartment in the heart of Baner with premium amenities, ample parking, and excellent connectivity to Hinjewadi IT Park.\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"bhk\":3,\"bathrooms\":2,\"carpetArea\":1200,\"builtUpArea\":1450,\"floorNumber\":4,\"totalFloors\":12,\"furnishing\":\"Semi-Furnished\",\"facing\":\"East\",\"address\":\"Skyline Heights, Plot 12, Baner Road\",\"locality\":\"Baner\",\"city\":\"Pune\",\"state\":\"Maharashtra\",\"pincode\":\"411045\",\"latitude\":18.5596,\"longitude\":73.7769,\"nearbyLandmarks\":[\"D-Mart Baner\",\"Orchid School\",\"Baner Metro Station\"],\"isVerified\":true,\"reraNumber\":\"P52100012345\",\"bankApprovals\":[\"SBI\",\"HDFC\",\"ICICI\"],\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"amenities\":[\"Gymnasium\",\"Swimming Pool\",\"24x7 Security\",\"CCTV\",\"Power Backup\"],\"partner\":{\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\"},\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0003e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Property not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Create Property Listing",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"3 BHK Flat in Baner\",\n  \"description\": \"Spacious 3 BHK apartment in the heart of Baner with premium amenities, ample parking, and excellent connectivity to Hinjewadi IT Park.\",\n  \"price\": 8500000,\n  \"propertyType\": \"FLAT\",\n  \"listingType\": \"SALE\",\n  \"propertyStatus\": \"READY_TO_MOVE\",\n  \"bhk\": 3,\n  \"bathrooms\": 2,\n  \"carpetArea\": 1200,\n  \"builtUpArea\": 1450,\n  \"floorNumber\": 4,\n  \"totalFloors\": 12,\n  \"ageOfProperty\": 2,\n  \"furnishing\": \"Semi-Furnished\",\n  \"facing\": \"East\",\n  \"address\": \"Skyline Heights, Plot 12, Baner Road\",\n  \"locality\": \"Baner\",\n  \"city\": \"Pune\",\n  \"state\": \"Maharashtra\",\n  \"pincode\": \"411045\",\n  \"latitude\": 18.5596,\n  \"longitude\": 73.7769,\n  \"nearbyLandmarks\": [\"D-Mart Baner\", \"Orchid School\", \"Baner Metro Station\"],\n  \"reraNumber\": \"P52100012345\",\n  \"bankApprovals\": [\"SBI\", \"HDFC\", \"ICICI\"],\n  \"amenities\": [\"Gymnasium\", \"Swimming Pool\", \"24x7 Security\", \"Power Backup\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties", "host": ["{{baseUrl}}"], "path": ["api","properties"] }
+          },
+          "response": [
+            {
+              "name": "201 – Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0004" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Listing submitted for review\",\"data\":{\"id\":\"664abc123def456789012345\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"publishStatus\":\"PENDING_APPROVAL\"}}"
+            },
+            {
+              "name": "403 – KYC Required",
+              "status": "Forbidden", "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0004e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"KYC verification required to list properties\"}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Property Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "images", "type": "file", "src": [], "description": "jpg/png/webp, max 10MB each, up to 10 files" },
+                { "key": "images", "type": "file", "src": [], "disabled": true },
+                { "key": "images", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties/{{propertyId}}/images", "host": ["{{baseUrl}}"], "path": ["api","properties","{{propertyId}}","images"] }
+          },
+          "response": [
+            {
+              "name": "200 – Images Uploaded",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Images uploaded\",\"data\":{\"id\":\"664abc123def456789012345\",\"images\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/existing.jpg\",\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/properties/new.jpg\"]}}"
+            },
+            {
+              "name": "400 – No Images",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"No images provided\"}"
+            }
+          ]
+        },
+        {
+          "name": "Update Property Listing",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 5800000,\n  \"priceNegotiable\": true,\n  \"amenities\": [\"Power Backup\", \"Gym\", \"Swimming Pool\", \"EV Charging\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties/{{propertyId}}", "host": ["{{baseUrl}}"], "path": ["api","properties","{{propertyId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Updated",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0005" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Property updated\",\"data\":{\"id\":\"664abc123def456789012345\",\"price\":5800000,\"priceNegotiable\":true,\"amenities\":[\"Power Backup\",\"Gym\",\"Swimming Pool\",\"EV Charging\"],\"updatedAt\":\"2026-05-19T11:30:00.000Z\"}}"
+            },
+            {
+              "name": "403 – Not Your Listing",
+              "status": "Forbidden", "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0005e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Not your listing\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "Submit Buyer Inquiry",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"buyerName\": \"Suresh Mehta\",\n  \"buyerEmail\": \"user@realtydoor.com\",\n  \"buyerPhone\": \"+919000000003\",\n  \"buyerMessage\": \"I am interested in this property. Can we schedule a visit this weekend?\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/leads", "host": ["{{baseUrl}}"], "path": ["api","leads"] }
+          },
+          "response": [
+            {
+              "name": "201 – Lead Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0010" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"We'll reach out within 24 hours\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"UNASSIGNED\",\"propertyId\":\"664abc123def456789012345\",\"buyerName\":\"Suresh Mehta\",\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+            },
+            {
+              "name": "403 – Phone Not Verified",
+              "status": "Forbidden", "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0010e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Phone verification required\",\"data\":{\"code\":\"PHONE_NOT_VERIFIED\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Partner Leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/leads/partner", "host": ["{{baseUrl}}"], "path": ["api","leads","partner"] }
+          },
+          "response": [
+            {
+              "name": "200 – Partner Leads (phone masked)",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0011" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerEmail\":\"user@realtydoor.com\",\"buyerPhone\":\"+91 90000 XXXXX\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"locality\":\"Baner\",\"city\":\"Pune\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Lead Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Lead Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0012" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerEmail\":\"user@realtydoor.com\",\"buyerPhone\":\"+91 90000 XXXXX\",\"buyerMessage\":\"I am interested in this property.\",\"status\":\"ASSIGNED\",\"isOtpVerified\":false,\"siteVisitScheduledAt\":null,\"visitNotes\":null,\"property\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"locality\":\"Baner\",\"city\":\"Pune\",\"price\":8500000},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0012e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Lead not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Schedule Site Visit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scheduledAt\": \"2026-05-25T10:00:00.000Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}/schedule-visit", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}","schedule-visit"] }
+          },
+          "response": [
+            {
+              "name": "200 – Visit Scheduled",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0013" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"message\":\"OTP sent to buyer via WhatsApp. Enter it at the site.\"}}"
+            },
+            {
+              "name": "400 – Lead Already Closed",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0013e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Cannot schedule visit on a closed lead\"}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Site Visit OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"7342\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}/verify-otp", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}","verify-otp"] }
+          },
+          "response": [
+            {
+              "name": "200 – OTP Verified (phone revealed)",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0014" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"message\":\"OTP verified. Buyer contact revealed.\",\"buyerPhone\":\"+919876543210\"}}"
+            },
+            {
+              "name": "400 – Wrong OTP",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0014e1" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Incorrect OTP — 2 attempt(s) remaining\"}"
+            },
+            {
+              "name": "429 – Locked Out",
+              "status": "Too Many Requests", "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0014e2" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Maximum OTP attempts reached. Contact Admin.\"}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Visit Documents",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "visitPhotos",  "type": "file", "src": [] },
+                { "key": "closureDocs",  "type": "file", "src": [], "disabled": true },
+                { "key": "visitNotes",   "value": "Buyer liked the property. Wants to negotiate on price.", "type": "text" },
+                { "key": "partnerNotes", "value": "Buyer is pre-approved for home loan from HDFC.", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}/document", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}","document"] }
+          },
+          "response": [
+            {
+              "name": "200 – Documents Uploaded",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0015" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Documentation uploaded\",\"data\":{\"id\":\"665def456abc789012345678\",\"visitPhotoUrls\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/tickets/visit1.jpg\"],\"closureDocumentUrls\":[],\"visitNotes\":\"Buyer liked the property. Wants to negotiate on price.\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Close Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}/close", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}","close"] }
+          },
+          "response": [
+            {
+              "name": "200 – Lead Closed",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0016" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"message\":\"Lead marked as closed. Admin will review escrow release.\"}}"
+            },
+            {
+              "name": "400 – No Escrow",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0016e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Escrow payment required before closing a deal\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Request Phone OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/verify-phone", "host": ["{{baseUrl}}"], "path": ["api","user","verify-phone"] }
+          },
+          "response": [
+            {
+              "name": "200 – OTP Sent",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0020" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"message\":\"OTP sent via WhatsApp\"}}"
+            },
+            {
+              "name": "409 – Phone Already In Use",
+              "status": "Conflict", "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0020e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Phone number already in use\"}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Phone OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"7412\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/verify-phone/otp", "host": ["{{baseUrl}}"], "path": ["api","user","verify-phone","otp"] }
+          },
+          "response": [
+            {
+              "name": "200 – Phone Verified",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Phone number verified\",\"data\":{\"phoneVerified\":true,\"phone\":\"+919876543210\"}}"
+            },
+            {
+              "name": "400 – Incorrect OTP",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Incorrect OTP\"}"
+            },
+            {
+              "name": "400 – OTP Expired",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"OTP has expired\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Inquiries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/leads", "host": ["{{baseUrl}}"], "path": ["api","user","leads"] }
+          },
+          "response": [
+            {
+              "name": "200 – User Inquiries",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0021" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"status\":\"SITE_VISIT_DONE\",\"buyerMessage\":\"I am interested in this property.\",\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"]},\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Toggle Favorite",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/favorites", "host": ["{{baseUrl}}"], "path": ["api","user","favorites"] }
+          },
+          "response": [
+            {
+              "name": "200 – Favorited",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0022" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"favorited\":true}}"
+            },
+            {
+              "name": "200 – Unfavorited",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0022b" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"favorited\":false}}"
+            }
+          ]
+        },
+        {
+          "name": "List My Documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/documents", "host": ["{{baseUrl}}"], "path": ["api","user","documents"] }
+          },
+          "response": [
+            {
+              "name": "200 – Documents",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0023" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"666aaa111bbb222ccc333ddd\",\"documentType\":\"PAN_CARD\",\"fileName\":\"pan_card.pdf\",\"fileUrl\":\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/vault/pan_card.pdf\",\"isVerified\":false,\"uploadedAt\":\"2026-05-15T08:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file",         "type": "file", "src": [] },
+                { "key": "documentType", "value": "PAN_CARD", "type": "text", "description": "PAN_CARD | AADHAR | SALARY_SLIP | FORM_16 | BANK_STATEMENT" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/documents", "host": ["{{baseUrl}}"], "path": ["api","user","documents"] }
+          },
+          "response": [
+            {
+              "name": "201 – Document Uploaded",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0024" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Document uploaded\",\"data\":{\"id\":\"666aaa111bbb222ccc333ddd\",\"documentType\":\"PAN_CARD\",\"fileName\":\"pan_card.pdf\",\"fileUrl\":\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/vault/pan_card.pdf\",\"isVerified\":false}}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/subscriptions", "host": ["{{baseUrl}}"], "path": ["api","user","subscriptions"] }
+          },
+          "response": [
+            {
+              "name": "200 – Subscriptions",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0025" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"667bbb222ccc333ddd444eee\",\"serviceId\":\"668ccc333ddd444eee555fff\",\"paymentStatus\":\"SUCCESS\",\"amountPaid\":5999,\"startDate\":\"2026-05-01T00:00:00.000Z\",\"endDate\":\"2027-05-01T00:00:00.000Z\",\"tickets\":[{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap broken\",\"status\":\"RESOLVED\",\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}]}"
+            }
+          ]
+        },
+        {
+          "name": "Raise Service Ticket",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subscriptionId\": \"{{subscriptionId}}\",\n  \"subject\": \"Bathroom tap dripping\",\n  \"description\": \"The cold water tap in the master bathroom has been dripping for 3 days.\",\n  \"category\": \"PLUMBING\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/tickets", "host": ["{{baseUrl}}"], "path": ["api","user","tickets"] }
+          },
+          "response": [
+            {
+              "name": "201 – Ticket Raised",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0026" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Ticket raised\",\"data\":{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap dripping\",\"status\":\"OPEN\",\"priority\":\"NORMAL\",\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+            },
+            {
+              "name": "400 – Service Not Active",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0026e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Service not active (payment not successful)\"}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Resolved Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/tickets/{{ticketId}}/verify", "host": ["{{baseUrl}}"], "path": ["api","user","tickets","{{ticketId}}","verify"] }
+          },
+          "response": [
+            {
+              "name": "200 – Ticket Verified",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0027" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Ticket verified and closed\",\"data\":{\"id\":\"669ddd444eee555fff666aaa\",\"status\":\"VERIFIED_BY_USER\",\"verifiedAt\":\"2026-05-19T12:00:00.000Z\"}}"
+            },
+            {
+              "name": "400 – Not Yet Resolved",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0027e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Ticket is not yet resolved\"}"
+            }
+          ]
+        },
+        {
+          "name": "Apply for Loan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"propertyId\": \"{{propertyId}}\",\n  \"preferredBank\": \"HDFC Bank\",\n  \"loanAmountRequestedPaise\": 4000000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/loan", "host": ["{{baseUrl}}"], "path": ["api","user","loan"] }
+          },
+          "response": [
+            {
+              "name": "201 – Loan Application Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0028" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Loan application submitted\",\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"propertyId\":\"664abc123def456789012345\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"createdAt\":\"2026-05-27T09:00:00.000Z\"}}"
+            },
+            {
+              "name": "403 – Phone Not Verified",
+              "status": "Forbidden", "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0028e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Phone number must be verified before applying for a loan\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Loan Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/loan", "host": ["{{baseUrl}}"], "path": ["api","user","loan"] }
+          },
+          "response": [
+            {
+              "name": "200 – My Loans",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"adminNote\":null,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\"},\"createdAt\":\"2026-05-27T09:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Loan Application by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/loan/{{loanId}}", "host": ["{{baseUrl}}"], "path": ["api","user","loan","{{loanId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Loan Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029b" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"sanctionedAmountPaise\":null,\"status\":\"DOCUMENTS_SUBMITTED\",\"statusHistory\":[\"DOCUMENTS_PENDING\",\"DOCUMENTS_SUBMITTED\"],\"adminNote\":\"Documents received, under verification.\",\"bankRefNumber\":null,\"sanctionedAt\":null,\"disbursedAt\":null,\"rejectionReason\":null,\"createdAt\":\"2026-05-27T09:00:00.000Z\",\"updatedAt\":\"2026-05-27T10:30:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0029e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Loan application not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Partners",
+      "item": [
+        {
+          "name": "Submit KYC Documents",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "documents", "type": "file", "src": [], "description": "RERA certificate, Aadhar, Business PAN — jpg/png/pdf, max 10MB, up to 5 files" },
+                { "key": "documents", "type": "file", "src": [], "disabled": true },
+                { "key": "documents", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner/kyc", "host": ["{{baseUrl}}"], "path": ["api","partner","kyc"] }
+          },
+          "response": [
+            {
+              "name": "200 – KYC Submitted",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0030" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"KYC submitted for review. Usually verified within 24 hours.\",\"data\":{\"kycStatus\":\"PENDING_REVIEW\",\"kycDocumentUrls\":[\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/kyc/rera_cert.pdf\"]}}"
+            },
+            {
+              "name": "400 – Already Verified",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0030e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"KYC already verified\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get Partner Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/partner/profile", "host": ["{{baseUrl}}"], "path": ["api","partner","profile"] }
+          },
+          "response": [
+            {
+              "name": "200 – Partner Profile",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0031" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"bio\":\"10 years of experience in Pune real estate market.\",\"websiteUrl\":\"https://realtypro.in\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-05-01T08:00:00.000Z\",\"createdAt\":\"2026-05-01T08:00:00.000Z\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Update Partner Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rajdeep Kumar\",\n  \"companyName\": \"RealtyPro Solutions\",\n  \"bio\": \"10 years of experience in Pune real estate market — Baner, Kothrud, Aundh.\",\n  \"websiteUrl\": \"https://realtypro.in\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/partner/profile", "host": ["{{baseUrl}}"], "path": ["api","partner","profile"] }
+          },
+          "response": [
+            {
+              "name": "200 – Profile Updated",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0032" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Profile updated\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"bio\":\"10 years of experience in Pune real estate market — Baner, Kothrud, Aundh.\",\"websiteUrl\":\"https://realtypro.in\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/partner/listings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","partner","listings"],
+              "query": [
+                { "key": "status", "value": "APPROVED", "description": "PENDING_APPROVAL | APPROVED | REJECTED | ARCHIVED", "disabled": true }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Partner Listings",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0033" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"city\":\"Pune\",\"locality\":\"Baner\",\"price\":8500000,\"bhk\":3,\"createdAt\":\"2026-05-01T10:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Listing Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/partner/listings/{{propertyId}}", "host": ["{{baseUrl}}"], "path": ["api","partner","listings","{{propertyId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Listing Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"description\":\"Spacious 3 BHK apartment in the heart of Baner with premium amenities.\",\"price\":8500000,\"propertyType\":\"FLAT\",\"listingType\":\"SALE\",\"propertyStatus\":\"READY_TO_MOVE\",\"publishStatus\":\"APPROVED\",\"rejectionNote\":null,\"bhk\":3,\"bathrooms\":2,\"carpetArea\":1200,\"locality\":\"Baner\",\"city\":\"Pune\",\"state\":\"Maharashtra\",\"pincode\":\"411045\",\"address\":\"Skyline Heights, Plot 12, Baner Road\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"],\"amenities\":[\"Gymnasium\",\"Swimming Pool\",\"24x7 Security\",\"Power Backup\"],\"createdAt\":\"2026-05-01T10:00:00.000Z\",\"updatedAt\":\"2026-05-10T08:30:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Listing not found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Finance Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/partner/finance", "host": ["{{baseUrl}}"], "path": ["api","partner","finance"] }
+          },
+          "response": [
+            {
+              "name": "200 – Finance Summary",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0034" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"totalLeads\":12,\"closedDeals\":3,\"escrowHeld\":300000}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Leads",
+          "item": [
+            {
+              "name": "Get All Leads",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/leads?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","leads"],
+                  "query": [
+                    { "key": "status",    "value": "UNASSIGNED", "description": "UNASSIGNED|ASSIGNED|SITE_VISIT_SCHEDULED|SITE_VISIT_DONE|CLOSED|DROPPED", "disabled": true },
+                    { "key": "partnerId", "value": "", "disabled": true },
+                    { "key": "page",      "value": "1" },
+                    { "key": "limit",     "value": "20" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – All Leads",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0040" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerPhone\":\"+91 90000 XXXXX\",\"status\":\"UNASSIGNED\",\"isOtpVerified\":false,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"city\":\"Pune\"},\"assignedPartner\":null,\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":24,\"page\":1,\"limit\":20,\"totalPages\":2,\"hasNext\":true,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Assign Lead to Partner",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"partnerId\": \"{{partnerId}}\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/assign", "host": ["{{baseUrl}}"], "path": ["api","admin","leads","{{leadId}}","assign"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Lead Assigned",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0041" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Lead assigned\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"ASSIGNED\",\"assignedPartnerId\":\"6a1a3213aa8de854e8acfad7\",\"assignedAt\":\"2026-05-19T11:30:00.000Z\"}}"
+                },
+                {
+                  "name": "400 – Partner Not KYC Verified",
+                  "status": "Bad Request", "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0041e" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Partner not found or not KYC verified\"}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Properties",
+          "item": [
+            {
+              "name": "Get Pending Properties",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/properties?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","properties"],
+                  "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Pending Properties",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0042" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner\",\"publishStatus\":\"PENDING_APPROVAL\",\"propertyType\":\"FLAT\",\"city\":\"Pune\",\"price\":8500000,\"partner\":{\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"email\":\"partner@realtydoor.com\"},\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Approve Property",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/properties/{{propertyId}}/approve", "host": ["{{baseUrl}}"], "path": ["api","admin","properties","{{propertyId}}","approve"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Property Approved",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0043" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Property approved\",\"data\":{\"id\":\"664abc123def456789012345\",\"publishStatus\":\"APPROVED\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Reject Property",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"note\": \"Cover photo is blurry. Please re-upload with a clear exterior shot showing the full building facade.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/properties/{{propertyId}}/reject", "host": ["{{baseUrl}}"], "path": ["api","admin","properties","{{propertyId}}","reject"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Property Rejected",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0044" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Property rejected\",\"data\":{\"id\":\"664abc123def456789012345\",\"publishStatus\":\"REJECTED\",\"rejectionNote\":\"Cover photo is blurry. Please re-upload with a clear exterior shot.\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Edit Property (Admin)",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"price\": 9000000,\n  \"title\": \"3 BHK Flat in Baner – Updated\",\n  \"description\": \"Recently renovated with new flooring and modular kitchen.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/properties/{{propertyId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","properties","{{propertyId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Property Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0044b" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Property updated\",\"data\":{\"id\":\"664abc123def456789012345\",\"title\":\"3 BHK Flat in Baner – Updated\",\"price\":9000000,\"publishStatus\":\"APPROVED\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "KYC",
+          "item": [
+            {
+              "name": "Get Pending KYC Submissions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/kyc?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","kyc"],
+                  "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Pending KYC",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0045" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"kycDocumentUrls\":[\"https://example.com/kyc/pan.pdf\",\"https://example.com/kyc/aadhar.pdf\"],\"createdAt\":\"2026-05-01T08:00:00.000Z\"}],\"pagination\":{\"total\":2,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Approve KYC",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"APPROVE\",\n  \"note\": \"\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/kyc/{{userId}}/verify", "host": ["{{baseUrl}}"], "path": ["api","admin","kyc","{{userId}}","verify"] }
+              },
+              "response": [
+                {
+                  "name": "200 – KYC Approved",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0046" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"KYC approved\"}"
+                }
+              ]
+            },
+            {
+              "name": "Reject KYC",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"action\": \"REJECT\",\n  \"note\": \"RERA certificate appears expired. Please resubmit with a valid certificate dated within the last 12 months.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/kyc/{{userId}}/verify", "host": ["{{baseUrl}}"], "path": ["api","admin","kyc","{{userId}}","verify"] }
+              },
+              "response": [
+                {
+                  "name": "200 – KYC Rejected",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0047" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"KYC rejected\"}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Revenue & Audit",
+          "item": [
+            {
+              "name": "Revenue Dashboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/revenue", "host": ["{{baseUrl}}"], "path": ["api","admin","revenue"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Revenue Summary",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0048" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"escrowHeld\":{\"amount\":2500000,\"count\":8},\"escrowReleasedMTD\":{\"amount\":1200000,\"count\":4},\"serviceRevenueMTD\":{\"amount\":89985,\"count\":15},\"closedLeadsMTD\":4,\"totalLeads\":124}}"
+                }
+              ]
+            },
+            {
+              "name": "Audit Logs",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/audit-logs?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","audit-logs"],
+                  "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Audit Logs",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0049" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaaa000bbb111ccc222ddd\",\"adminId\":\"6a1a3213aa8de854e8acfad6\",\"action\":\"LEAD_ASSIGNED\",\"targetType\":\"Lead\",\"targetId\":\"665def456abc789012345678\",\"before\":\"{\\\"status\\\":\\\"UNASSIGNED\\\"}\",\"after\":\"{\\\"status\\\":\\\"ASSIGNED\\\",\\\"assignedPartnerId\\\":\\\"6a1a3213aa8de854e8acfad7\\\"}\",\"ipAddress\":\"103.58.12.44\",\"createdAt\":\"2026-05-19T11:00:00.000Z\"}],\"pagination\":{\"total\":89,\"page\":1,\"limit\":20,\"totalPages\":5,\"hasNext\":true,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Partner Performance",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/partners", "host": ["{{baseUrl}}"], "path": ["api","admin","partners"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Partner Performance",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0050" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\",\"partnerSubType\":\"AGENT\",\"totalLeads\":12,\"closedLeads\":3,\"totalListings\":4,\"activeListings\":4}]}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Escrow",
+          "item": [
+            {
+              "name": "List Escrow Transactions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/escrow?page=1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","escrow"],
+                  "query": [
+                    { "key": "status", "value": "HELD", "description": "HELD | RELEASED | REFUNDED", "disabled": true },
+                    { "key": "page",   "value": "1" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Escrow Transactions",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0051" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66bbb111ccc222ddd333eee4\",\"leadId\":\"665def456abc789012345678\",\"razorpayOrderId\":\"order_Abc123XYZ\",\"amount\":100000,\"status\":\"HELD\",\"createdAt\":\"2026-05-15T09:00:00.000Z\"}],\"pagination\":{\"total\":8,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Release Escrow to Seller",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"sellerAccountId\": \"acc_xxxxxxxxxxxxxxxx\",\n  \"partnerShare\": 80000,\n  \"platformFee\": 20000,\n  \"note\": \"Allocation letter verified. Releasing payment to builder.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/escrow/{{escrowId}}/release", "host": ["{{baseUrl}}"], "path": ["api","admin","escrow","{{escrowId}}","release"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Escrow Released",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0052" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Escrow released\",\"data\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"RELEASED\",\"releasedAt\":\"2026-05-19T12:00:00.000Z\"}}"
+                },
+                {
+                  "name": "400 – Cannot Release Refunded",
+                  "status": "Bad Request", "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0052e" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Cannot release escrow with status REFUNDED\"}"
+                }
+              ]
+            },
+            {
+              "name": "Refund Escrow to Buyer",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/escrow/{{escrowId}}/refund", "host": ["{{baseUrl}}"], "path": ["api","admin","escrow","{{escrowId}}","refund"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Escrow Refunded",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0053" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Escrow refunded\",\"data\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"REFUNDED\",\"refundedAt\":\"2026-05-19T12:30:00.000Z\"}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CMS Content",
+          "item": [
+            {
+              "name": "Create Content Block",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"BLOG\",\n  \"title\": \"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\n  \"slug\": \"top-5-pune-neighbourhoods-2024\",\n  \"content\": \"<h2>1. Baner</h2><p>Baner has emerged as one of Pune's most sought-after residential hubs...</p>\",\n  \"excerpt\": \"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\n  \"author\": \"RealtyDoor Research\",\n  \"tags\": [\"Pune\", \"Investment\", \"Residential\", \"2024\", \"Neighbourhood Guide\"],\n  \"isPublished\": true,\n  \"seoTitle\": \"Top 5 Pune Neighbourhoods to Buy Property in 2024 | RealtyDoor\",\n  \"seoDesc\": \"Discover the best areas to invest in Pune real estate — Baner, Kothrud, Aundh, Hinjewadi & Wakad compared.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/content", "host": ["{{baseUrl}}"], "path": ["api","admin","content"] }
+              },
+              "response": [
+                {
+                  "name": "201 – Content Created",
+                  "status": "Created", "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0054" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Content created\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"isPublished\":true,\"createdAt\":\"2026-05-30T08:00:00.000Z\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Content Block",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Top 5 Neighbourhoods to Buy Property in Pune (2024) — Updated\",\n  \"isPublished\": false\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/content/{{contentId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","content","{{contentId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Content Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0055" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Content updated\",\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024) — Updated\",\"isPublished\":false,\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Delete Content Block",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/content/{{contentId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","content","{{contentId}}"] }
+              },
+              "response": [
+                {
+                  "name": "204 – Deleted",
+                  "status": "No Content", "code": 204,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "X-Request-Id", "value": "a1b2c3d4-0056" }],
+                  "cookie": [],
+                  "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "List All Users",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/users?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","users"],
+                  "query": [
+                    { "key": "role",   "value": "PARTNER", "description": "USER | PARTNER | ADMIN", "disabled": true },
+                    { "key": "search", "value": "",        "description": "Partial match on name or email", "disabled": true },
+                    { "key": "page",   "value": "1" },
+                    { "key": "limit",  "value": "20" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – All Users",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0058" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"6a1a3213aa8de854e8acfad7\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"kycStatus\":\"VERIFIED\",\"partnerSubType\":\"AGENT\",\"createdAt\":\"2026-05-01T08:00:00.000Z\"},{\"id\":\"6a1a3213aa8de854e8acfad8\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"kycStatus\":\"NOT_SUBMITTED\",\"partnerSubType\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Change User Role",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"PARTNER\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/users/{{userId}}/role",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","users","{{userId}}","role"]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Role Updated to PARTNER",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0059" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Role updated to PARTNER\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"role\":\"PARTNER\"}}"
+                },
+                {
+                  "name": "400 – Invalid Role",
+                  "status": "Bad Request", "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0059e" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Invalid role\"}"
+                },
+                {
+                  "name": "404 – User Not Found",
+                  "status": "Not Found", "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0059e2" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"User not found\"}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Notifications",
+          "item": [
+            {
+              "name": "Broadcast Notification",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"roles\": [\"USER\"],\n  \"title\": \"New Feature: Video Tours Now Available\",\n  \"message\": \"You can now request live video tours for any NRI-friendly listing.\",\n  \"type\": \"ANNOUNCEMENT\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/notifications/broadcast", "host": ["{{baseUrl}}"], "path": ["api","admin","notifications","broadcast"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Broadcast Sent",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0057" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Broadcast sent\",\"data\":{\"count\":1452}}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Loan Management",
+          "item": [
+            {
+              "name": "List All Loan Applications",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/loan?page=1&limit=20&status=DOCUMENTS_PENDING",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","loan"],
+                  "query": [
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "20" },
+                    { "key": "status", "value": "DOCUMENTS_PENDING" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – Loan Applications",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060a" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"669eee555fff666aaa777bbb\",\"preferredBank\":\"HDFC Bank\",\"loanAmountRequestedPaise\":4000000,\"status\":\"DOCUMENTS_PENDING\",\"user\":{\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\"},\"createdAt\":\"2026-05-27T09:00:00.000Z\"}],\"pagination\":{\"total\":5,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Loan Status",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DOCUMENTS_VERIFIED\",\n  \"adminNote\": \"All documents verified. Sending to HDFC Bank for sanction.\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/loan/{{loanId}}/status", "host": ["{{baseUrl}}"], "path": ["api","admin","loan","{{loanId}}","status"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Status Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060b" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Loan status updated\",\"data\":{\"id\":\"669eee555fff666aaa777bbb\",\"status\":\"DOCUMENTS_VERIFIED\",\"adminNote\":\"All documents verified. Sending to HDFC Bank for sanction.\",\"updatedAt\":\"2026-05-27T11:00:00.000Z\"}}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Escrow",
+      "item": [
+        {
+          "name": "Create Escrow Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leadId\": \"{{leadId}}\",\n  \"amount\": 100000\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/escrow/create-order", "host": ["{{baseUrl}}"], "path": ["api","escrow","create-order"] }
+          },
+          "response": [
+            {
+              "name": "201 – Escrow Order Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Escrow order created\",\"data\":{\"escrow\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"PAYMENT_PENDING\",\"amount\":100000},\"razorpayOrder\":{\"id\":\"order_Abc123XYZescrow\",\"amount\":10000000,\"currency\":\"INR\"}}}"
+            },
+            {
+              "name": "400 – Escrow Already Exists",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0060e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Escrow already held for this lead\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Locality Insights",
+      "item": [
+        {
+          "name": "Get Locality Insight",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locality-insights?city=Pune&locality=Baner",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","locality-insights"],
+              "query": [
+                { "key": "city", "value": "Pune" },
+                { "key": "locality", "value": "Baner" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Locality Data",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"citySlug\":\"pune\",\"localitySlug\":\"baner\",\"avgPricePerSqftPaise\":850000,\"minPricePerSqftPaise\":700000,\"maxPricePerSqftPaise\":1050000,\"avgRentPerMonthPaise\":2800000,\"priceChangeLastMonthPct\":2.3,\"nearbyInfra\":[\"D-Mart\",\"Orchid School\",\"Baner Metro Station\",\"Aditya Birla Hospital\"],\"dataAsOfDate\":\"2024-01-01T00:00:00.000Z\",\"createdAt\":\"2026-05-01T06:00:00.000Z\",\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"No locality data found\"}"
+            }
+          ]
+        },
+        {
+          "name": "Upsert Locality Insight (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"city\": \"Pune\",\n  \"locality\": \"Baner\",\n  \"citySlug\": \"pune\",\n  \"localitySlug\": \"baner\",\n  \"avgPricePerSqftPaise\": 850000,\n  \"minPricePerSqftPaise\": 700000,\n  \"maxPricePerSqftPaise\": 1050000,\n  \"avgRentPerMonthPaise\": 2800000,\n  \"priceChangeLastMonthPct\": 2.3,\n  \"nearbyInfra\": [\"D-Mart\", \"Orchid School\", \"Baner Metro Station\", \"Aditya Birla Hospital\"],\n  \"dataAsOfDate\": \"2024-01-01T00:00:00.000Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/locality-insights", "host": ["{{baseUrl}}"], "path": ["api","locality-insights"] }
+          },
+          "response": [
+            {
+              "name": "201 – Locality Insight Saved",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0072" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Locality insight saved\",\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqftPaise\":850000,\"dataAsOfDate\":\"2024-01-01T00:00:00.000Z\",\"updatedAt\":\"2026-05-30T08:00:00.000Z\"}}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Locality Insight (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/locality-insights/{{localityInsightId}}", "host": ["{{baseUrl}}"], "path": ["api","locality-insights","{{localityInsightId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Deleted",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0073" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Locality insight deleted\",\"data\":null}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0073e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Locality insight not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Services",
+      "item": [
+        {
+          "name": "List Active Services",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/services", "host": ["{{baseUrl}}"], "path": ["api","services"] }
+          },
+          "response": [
+            {
+              "name": "200 – Services",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0070" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"668ccc333ddd444eee555fff\",\"name\":\"Annual Maintenance Plan\",\"shortDesc\":\"12 months of home maintenance coverage\",\"price\":5999,\"category\":\"MAINTENANCE\",\"features\":[\"Plumbing\",\"Electrical\",\"Painting touch-up\",\"24h support\"],\"isActive\":true,\"sortOrder\":1,\"imageUrl\":\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/services/maintenance.jpg\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Create Service Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/services/create-order", "host": ["{{baseUrl}}"], "path": ["api","services","create-order"] }
+          },
+          "response": [
+            {
+              "name": "201 – Service Order Created",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Order created\",\"data\":{\"subscription\":{\"id\":\"667bbb222ccc333ddd444eee\",\"paymentStatus\":\"PENDING\",\"amountPaid\":5999},\"razorpayOrder\":{\"id\":\"order_Abc123XYZsvc\",\"amount\":599900,\"currency\":\"INR\"},\"key\":\"rzp_live_xxxxxxxx\"}}"
+            },
+            {
+              "name": "404 – Service Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Service not found or inactive\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CMS / Blog",
+      "item": [
+        {
+          "name": "List Blog Content",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/blog?type=BLOG&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","blog"],
+              "query": [
+                { "key": "type",  "value": "BLOG", "description": "BLOG|TESTIMONIAL|HERO_BANNER|STATS_BAR|FAQ|NRI_GUIDE|TEAM_MEMBER|ANNOUNCEMENT" },
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Blog List",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0080" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"excerpt\":\"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\"author\":\"RealtyDoor Research\",\"tags\":[\"Pune\",\"Investment\",\"Residential\",\"2024\",\"Neighbourhood Guide\"],\"isPublished\":true,\"publishedAt\":\"2024-01-10T00:00:00.000Z\"}],\"pagination\":{\"total\":2,\"page\":1,\"limit\":10,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Blog Post by Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/blog/top-5-pune-neighbourhoods-2024", "host": ["{{baseUrl}}"], "path": ["api","blog","top-5-pune-neighbourhoods-2024"] }
+          },
+          "response": [
+            {
+              "name": "200 – Blog Post",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0081" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG\",\"title\":\"Top 5 Neighbourhoods to Buy Property in Pune (2024)\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"content\":\"<h2>1. Baner</h2><p>Baner has emerged as one of Pune's most sought-after residential hubs...</p>\",\"excerpt\":\"Thinking about buying a home in Pune? Here are the top 5 neighbourhoods offering the best combination of price appreciation and quality of life.\",\"author\":\"RealtyDoor Research\",\"tags\":[\"Pune\",\"Investment\",\"Residential\",\"2024\",\"Neighbourhood Guide\"],\"isPublished\":true,\"publishedAt\":\"2024-01-10T00:00:00.000Z\",\"seoTitle\":\"Top 5 Pune Neighbourhoods to Buy Property in 2024 | RealtyDoor\",\"seoDesc\":\"Discover the best areas to invest in Pune real estate — Baner, Kothrud, Aundh, Hinjewadi & Wakad compared.\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0081e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Content not found\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/notifications?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","notifications"],
+              "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "20" }]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Notifications",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0090" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66eee555fff666aaa777bbb1\",\"title\":\"New Lead Assigned\",\"message\":\"A new buyer lead has been assigned to you.\",\"type\":\"LEAD_ASSIGNED\",\"isRead\":false,\"linkUrl\":\"/partner/leads/665def456abc789012345678\",\"createdAt\":\"2026-05-19T11:00:00.000Z\"}],\"pagination\":{\"total\":7,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/notifications/{{notificationId}}/read", "host": ["{{baseUrl}}"], "path": ["api","notifications","{{notificationId}}","read"] }
+          },
+          "response": [
+            {
+              "name": "200 – Marked Read",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0091" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Marked as read\"}"
+            }
+          ]
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/notifications/read-all", "host": ["{{baseUrl}}"], "path": ["api","notifications","read-all"] }
+          },
+          "response": [
+            {
+              "name": "200 – All Marked Read",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0092" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"All marked as read\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Contact",
+      "item": [
+        {
+          "name": "Submit Contact Form",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amit Verma\",\n  \"email\": \"amit@example.com\",\n  \"phone\": \"+919876500001\",\n  \"subject\": \"Partnership Inquiry\",\n  \"message\": \"I am a RERA-registered agent in Hyderabad and interested in listing on RealtyDoor. Please get in touch.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/contact", "host": ["{{baseUrl}}"], "path": ["api","contact"] }
+          },
+          "response": [
+            {
+              "name": "201 – Message Received",
+              "status": "Created", "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0100" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Message received. We will get back to you shortly.\",\"data\":{\"id\":\"66fff666aaa777bbb888ccc\"}}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "description": "Login sync and profile endpoints. Call POST /sync after every Clerk login from the frontend.",
+      "item": [
+        {
+          "name": "Sync User on Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{authToken}}", "description": "Clerk session JWT" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/auth/sync", "host": ["{{baseUrl}}"], "path": ["api","auth","sync"] },
+            "description": "Call this on every login from Next.js. Verifies the Clerk JWT, fetches the full Clerk profile (name, email, phone, avatar), upserts the MongoDB record, and returns the full profile. Also stamps publicMetadata.role in Clerk if missing."
+          },
+          "response": [
+            {
+              "name": "200 – Synced",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0200" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"clerkId\":\"user_seed_user_001\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\"}}"
+            },
+            {
+              "name": "200 – Partner Synced",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0200p" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad7\",\"clerkId\":\"user_seed_partner_001\",\"name\":\"Rajdeep Kumar\",\"email\":\"partner@realtydoor.com\",\"phone\":\"+919000000002\",\"phoneVerified\":true,\"role\":\"PARTNER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":\"AGENT\",\"companyName\":\"RealtyPro Solutions\",\"bio\":\"10 years of experience in Pune real estate market.\",\"websiteUrl\":\"https://realtypro.in\",\"kycStatus\":\"VERIFIED\",\"kycVerifiedAt\":\"2026-05-01T08:00:00.000Z\",\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\"}}"
+            },
+            {
+              "name": "401 – Invalid Token",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0200e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Sync failed: Invalid token\"}"
+            }
+          ]
+        },
+        {
+          "name": "Set Role (USER → PARTNER)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"PARTNER\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/set-role", "host": ["{{baseUrl}}"], "path": ["api","auth","set-role"] },
+            "description": "Self-service upgrade from USER to PARTNER. Only PARTNER can be self-assigned. Idempotent — if already PARTNER or ADMIN, returns current role."
+          },
+          "response": [
+            {
+              "name": "200 – Role Set",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"role\":\"PARTNER\"}}"
+            },
+            {
+              "name": "400 – Invalid Role",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Only PARTNER role can be self-assigned\"}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] },
+            "description": "Returns the full DB profile for the authenticated user including unread notification count and active subscription. Works for all roles (USER, PARTNER, ADMIN)."
+          },
+          "response": [
+            {
+              "name": "200 – User Profile",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0201" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"clerkId\":\"user_seed_user_001\",\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\",\"phone\":\"+919000000003\",\"phoneVerified\":true,\"role\":\"USER\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\",\"unreadNotifications\":0,\"activeSubscription\":null}}"
+            },
+            {
+              "name": "200 – Admin Profile",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0201a" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad6\",\"clerkId\":\"user_seed_admin_001\",\"name\":\"Admin User\",\"email\":\"admin@realtydoor.com\",\"phone\":\"+919000000001\",\"phoneVerified\":true,\"role\":\"ADMIN\",\"isNRI\":false,\"profileImageUrl\":null,\"partnerSubType\":null,\"companyName\":null,\"bio\":null,\"websiteUrl\":null,\"kycStatus\":\"NOT_SUBMITTED\",\"kycVerifiedAt\":null,\"kycRejectionNote\":null,\"createdAt\":\"2026-05-01T08:00:00.000Z\",\"updatedAt\":\"2026-05-01T08:00:00.000Z\",\"unreadNotifications\":0,\"activeSubscription\":null}}"
+            },
+            {
+              "name": "401 – No Token",
+              "status": "Unauthorized", "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0201e" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"No token provided\"}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Razorpay Webhook — payment.captured",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",          "value": "application/json" },
+              { "key": "x-razorpay-signature",  "value": "<hmac-sha256-of-body>", "description": "HMAC-SHA256(rawBody, RAZORPAY_WEBHOOK_SECRET)" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.captured\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_Abc123XYZ\",\n        \"order_id\": \"order_Abc123XYZescrow\",\n        \"amount\": 10000000,\n        \"currency\": \"INR\",\n        \"status\": \"captured\",\n        \"method\": \"upi\",\n        \"email\": \"user@realtydoor.com\",\n        \"contact\": \"+919000000003\",\n        \"created_at\": 1747648200\n      }\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/razorpay", "host": ["{{baseUrl}}"], "path": ["api","webhooks","razorpay"] }
+          },
+          "response": [
+            {
+              "name": "200 – Webhook Processed",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0110" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            },
+            {
+              "name": "400 – Invalid Signature",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0110e" }],
+              "cookie": [],
+              "body": "{\"error\":\"Invalid signature\"}"
+            }
+          ]
+        },
+        {
+          "name": "Clerk Webhook — user.created",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",    "value": "application/json" },
+              { "key": "svix-id",         "value": "msg_2abc123def456", "description": "Unique message ID from Clerk" },
+              { "key": "svix-timestamp",  "value": "1716105600",        "description": "Unix timestamp of the event" },
+              { "key": "svix-signature",  "value": "v1,<base64-hmac>",  "description": "HMAC-SHA256 signature — generated by Clerk" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.created\",\n  \"data\": {\n    \"id\": \"user_seed_user_001\",\n    \"first_name\": \"Suresh\",\n    \"last_name\": \"Mehta\",\n    \"email_addresses\": [\n      {\n        \"email_address\": \"user@realtydoor.com\",\n        \"id\": \"idn_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"phone_numbers\": [\n      {\n        \"phone_number\": \"+919876543210\",\n        \"id\": \"iph_abc123\",\n        \"verification\": { \"status\": \"verified\" }\n      }\n    ],\n    \"image_url\": \"https://img.clerk.com/avatar.jpg\",\n    \"created_at\": 1716105600000\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/clerk", "host": ["{{baseUrl}}"], "path": ["api","webhooks","clerk"] }
+          },
+          "response": [
+            {
+              "name": "200 – User Synced",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0112" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            },
+            {
+              "name": "400 – Invalid Signature",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0112e" }],
+              "cookie": [],
+              "body": "{\"error\":\"Invalid signature\"}"
+            }
+          ]
+        },
+        {
+          "name": "Clerk Webhook — user.updated",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",   "value": "application/json" },
+              { "key": "svix-id",        "value": "msg_2abc123def457" },
+              { "key": "svix-timestamp", "value": "1716105700" },
+              { "key": "svix-signature", "value": "v1,<base64-hmac>" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.updated\",\n  \"data\": {\n    \"id\": \"user_2abc123def456\",\n    \"first_name\": \"Priya\",\n    \"last_name\": \"Sharma-Gupta\",\n    \"email_addresses\": [\n      { \"email_address\": \"priya.new@example.com\", \"id\": \"idn_abc123\" }\n    ],\n    \"image_url\": \"https://img.clerk.com/avatar-updated.jpg\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/clerk", "host": ["{{baseUrl}}"], "path": ["api","webhooks","clerk"] }
+          },
+          "response": [
+            {
+              "name": "200 – User Updated",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0113" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            }
+          ]
+        },
+        {
+          "name": "Clerk Webhook — user.deleted",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",   "value": "application/json" },
+              { "key": "svix-id",        "value": "msg_2abc123def458" },
+              { "key": "svix-timestamp", "value": "1716105800" },
+              { "key": "svix-signature", "value": "v1,<base64-hmac>" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"user.deleted\",\n  \"data\": {\n    \"id\": \"user_2abc123def456\",\n    \"deleted\": true\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/clerk", "host": ["{{baseUrl}}"], "path": ["api","webhooks","clerk"] }
+          },
+          "response": [
+            {
+              "name": "200 – User Deleted",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0114" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            }
+          ]
+        },
+        {
+          "name": "Razorpay Webhook — payment.failed",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",         "value": "application/json" },
+              { "key": "x-razorpay-signature", "value": "<hmac-sha256-of-body>" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"payment.failed\",\n  \"payload\": {\n    \"payment\": {\n      \"entity\": {\n        \"id\": \"pay_Failed123\",\n        \"order_id\": \"order_Abc123XYZsvc\",\n        \"amount\": 599900,\n        \"currency\": \"INR\",\n        \"status\": \"failed\",\n        \"error_code\": \"BAD_REQUEST_ERROR\",\n        \"error_description\": \"Payment failed due to insufficient funds.\",\n        \"created_at\": 1747648200\n      }\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/razorpay", "host": ["{{baseUrl}}"], "path": ["api","webhooks","razorpay"] }
+          },
+          "response": [
+            {
+              "name": "200 – Failure Recorded",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0111" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+// ─── CONSTRUCTION UPDATE (Phase 2) ────────────────────────────────────────────
+// Builder posts milestone updates for under-construction projects.
+// Buyers/NRIs see a progress timeline on the property detail page.
+
+model ConstructionUpdate {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  propertyId     String   @db.ObjectId
+  property       Property @relation(fields: [propertyId], references: [id])
+  milestoneTitle String
+  description    String?
+  mediaUrls      String[]
+  completionPct  Int?
+  postedAt       DateTime @default(now())
+}

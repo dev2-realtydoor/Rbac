@@ -1,0 +1,138 @@
+// ─── datasource + generator (must appear in exactly one file) ─────────────────
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["prismaSchemaFolder"]
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  PARTNER
+  ADMIN
+}
+
+enum PartnerSubType {
+  AGENT
+  BUILDER
+  ADVISOR
+  OWNER
+}
+
+enum PropertyType {
+  FLAT
+  INDEPENDENT_HOUSE
+  VILLA
+  PLOT
+  COMMERCIAL_OFFICE
+  RETAIL_SHOP
+}
+
+enum ListingType {
+  SALE
+  RENT
+  LEASE
+}
+
+enum PublishStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum PropertyStatus {
+  READY_TO_MOVE
+  UNDER_CONSTRUCTION
+  SOLD
+  RENTED
+}
+
+enum LeadStatus {
+  UNASSIGNED
+  ASSIGNED
+  SITE_VISIT_SCHEDULED
+  SITE_VISIT_DONE
+  CLOSED
+  DROPPED
+}
+
+enum KycStatus {
+  NOT_SUBMITTED
+  PENDING_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  VERIFIED_BY_USER
+}
+
+enum EscrowStatus {
+  PAYMENT_PENDING
+  HELD
+  RELEASED
+  REFUNDED
+  FAILED
+  CANCELLED
+}
+
+enum BuyerFeedbackStatus {
+  INTERESTED
+  NOT_INTERESTED
+  STILL_DECIDING
+  NO_RESPONSE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum B2BConnectionStatus {
+  INTERESTED
+  CONNECTED
+  CLOSED
+}
+
+enum VideoTourStatus {
+  PENDING
+  ASSIGNED
+  COMPLETED
+}
+
+enum DocumentStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum CommissionStatus {
+  PENDING
+  INVOICED
+  COLLECTED
+  DISPUTED
+}
+
+enum LoanStatus {
+  DOCUMENTS_PENDING
+  DOCUMENTS_SUBMITTED
+  DOCUMENTS_VERIFIED
+  SENT_TO_BANK
+  AWAITING_SANCTION
+  SANCTIONED
+  DISBURSED
+  REJECTED
+}

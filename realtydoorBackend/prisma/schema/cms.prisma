@@ -1,0 +1,24 @@
+// ─── ADMIN CMS ────────────────────────────────────────────────────────────────
+// Single model for all content types managed via the Admin CMS panel.
+// type: BLOG | FAQ | HERO_BANNER | TESTIMONIAL | ANNOUNCEMENT | STATS_BAR | NRI_GUIDE | TEAM_MEMBER
+
+model ContentBlock {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  type        String
+  title       String
+  slug        String?   @unique
+  content     String
+  excerpt     String?
+  imageUrl    String?
+  author      String?
+  tags        String[]
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+  seoTitle    String?
+  seoDesc     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([type, isPublished])
+  @@index([isPublished, publishedAt])
+}

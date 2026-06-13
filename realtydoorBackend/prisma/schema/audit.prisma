@@ -1,0 +1,25 @@
+// ─── AUDIT LOG ────────────────────────────────────────────────────────────────
+// Immutable record of every Admin action (PRD §3.1 — Vikram's requirement).
+// before/after stored as JSON strings for diffing.
+// action examples: LEAD_ASSIGNED | PROPERTY_APPROVED | PROPERTY_REJECTED |
+//   KYC_APPROVE | KYC_REJECT | ESCROW_RELEASED | ESCROW_REFUNDED
+
+model AuditLog {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  adminId    String   @db.ObjectId
+  action     String
+  targetType String
+  targetId   String
+  before     String?
+  after      String?
+  ipAddress  String?
+  actorRole  String?
+  requestId  String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@index([action, createdAt])
+}

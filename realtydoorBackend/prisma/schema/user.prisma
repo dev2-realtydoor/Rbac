@@ -1,0 +1,54 @@
+// ─── USER ─────────────────────────────────────────────────────────────────────
+// Single model covers all 3 roles: USER / PARTNER / ADMIN
+// partnerSubType is informational only — does NOT control permissions (PRD §2.1)
+
+model User {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  clerkId       String          @unique
+  name          String
+  email         String          @unique
+  phone               String?   @unique
+  phoneVerifiedAt     DateTime?
+  phoneVerified       Boolean   @default(false)
+  phoneOtp            String?
+  phoneOtpExpiresAt   DateTime?
+  phoneOtpAttempts    Int       @default(0)
+  phoneOtpLockedUntil DateTime?
+  role          Role            @default(USER)
+  isNRI         Boolean         @default(false)
+
+  // Partner-specific fields
+  partnerSubType  PartnerSubType?
+  companyName     String?
+  bio             String?
+  profileImageUrl String?
+  websiteUrl      String?
+
+  // Premium B2B partner (Phase 2 — §3.2)
+  isPremiumPartner   Boolean   @default(false)
+  premiumValidUntil  DateTime?
+  premiumOrderId     String?
+
+  // KYC (Partners only)
+  kycStatus        KycStatus @default(NOT_SUBMITTED)
+  kycDocumentUrls  String[]
+  kycRejectionNote String?
+  kycVerifiedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  properties        Property[]
+  assignedLeads     Lead[]            @relation("PartnerLeads")
+  userDocuments     UserDocument[]
+  subscriptions     UserSubscription[]
+  tickets           ServiceTicket[]
+  notifications     Notification[]
+  favorites         Favorite[]
+  b2bListings       B2BConnection[]   @relation("ListingPartner")
+  b2bCollabs        B2BConnection[]   @relation("BuyerPartner")
+  videoTourRequests VideoTourRequest[]
+  contactMessages   ContactMessage[]
+  loanApplications  LoanApplication[]
+}

@@ -1,0 +1,35 @@
+// ─── ESCROW TRANSACTION ───────────────────────────────────────────────────────
+// Mandatory token advance for every deal closure (PRD §5 — Leakage 3, Rule 6).
+// Uses Razorpay Route to hold → release to seller or refund to buyer.
+// A Lead cannot be marked CLOSED unless an EscrowTransaction { status: HELD } exists.
+
+model EscrowTransaction {
+  id                String       @id @default(auto()) @map("_id") @db.ObjectId
+  leadId            String       @db.ObjectId
+  lead              Lead         @relation(fields: [leadId], references: [id])
+  buyerId           String       @db.ObjectId
+  razorpayOrderId    String       @unique
+  razorpayPaymentId  String?
+  razorpayTransferId String?
+  razorpayRefundId   String?
+
+  amount    Float
+  currency  String       @default("INR")
+
+  status      EscrowStatus @default(PAYMENT_PENDING)
+  heldAt      DateTime?
+  releasedAt  DateTime?
+  refundedAt  DateTime?
+  failedAt    DateTime?
+  cancelledAt DateTime?
+
+  releasedByAdminId String?  @db.ObjectId
+  adminNote         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([buyerId])
+  @@index([status])
+  @@index([status, createdAt])
+}
