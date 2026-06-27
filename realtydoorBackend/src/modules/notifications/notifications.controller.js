@@ -1,6 +1,7 @@
 const { success } = require('../../utils/ApiResponse');
 const { parsePagination, paginate } = require('../../utils/pagination');
 const service = require('./notifications.service');
+const { broadcastSchema } = require('./notifications.validator');
 
 async function getMyNotifications(req, res, next) {
   try {
@@ -26,7 +27,8 @@ async function markAllRead(req, res, next) {
 
 async function broadcast(req, res, next) {
   try {
-    const result = await service.broadcast(req.body);
+    const data = broadcastSchema.parse(req.body);
+    const result = await service.broadcast(data);
     success(res, result, 'Broadcast sent');
   } catch (err) { next(err); }
 }

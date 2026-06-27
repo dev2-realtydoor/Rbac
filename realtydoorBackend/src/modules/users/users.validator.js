@@ -1,0 +1,51 @@
+const { z } = require('zod');
+const { indianPhone, objectId } = require('../../utils/validators');
+
+const requestPhoneOtpSchema = z.object({
+  phone: indianPhone,
+});
+
+const verifyPhoneOtpSchema = z.object({
+  otp: z.string().length(4, 'OTP must be exactly 4 digits').regex(/^\d{4}$/, 'OTP must be numeric'),
+});
+
+const toggleFavoriteSchema = z.object({
+  propertyId: objectId,
+});
+
+const DOCUMENT_TYPES = ['PAN_CARD', 'AADHAR', 'SALARY_SLIP', 'FORM_16', 'BANK_STATEMENT'];
+
+const uploadDocumentSchema = z.object({
+  documentType: z.enum(DOCUMENT_TYPES, {
+    errorMap: () => ({ message: `documentType must be one of: ${DOCUMENT_TYPES.join(', ')}` }),
+  }),
+});
+
+const raiseTicketSchema = z.object({
+  subscriptionId: objectId,
+  subject: z.string().min(3, 'Subject must be at least 3 characters').max(200),
+  description: z.string().min(5, 'Description must be at least 5 characters').max(2000),
+  category: z.enum(['PLUMBING', 'ELECTRICAL', 'PAINTING', 'GENERAL']).optional(),
+  priority: z.enum(['NORMAL', 'HIGH', 'URGENT']).optional(),
+});
+
+const createLoanSchema = z.object({
+  propertyId: objectId.optional(),
+  preferredBank: z.string().max(100).optional(),
+  loanAmountRequestedPaise: z.number().int().positive().optional(),
+});
+
+const updateProfileSchema = z.object({
+  name:  z.string().min(2).max(100).optional(),
+  isNRI: z.boolean().optional(),
+}).refine((d) => Object.keys(d).length > 0, { message: 'At least one field must be provided' });
+
+module.exports = {
+  requestPhoneOtpSchema,
+  verifyPhoneOtpSchema,
+  toggleFavoriteSchema,
+  uploadDocumentSchema,
+  raiseTicketSchema,
+  createLoanSchema,
+  updateProfileSchema,
+};

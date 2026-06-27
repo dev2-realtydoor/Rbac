@@ -1,3 +1,4 @@
+const { ZodError } = require('zod');
 const ApiError = require('../utils/ApiError');
 const logger = require('../lib/logger');
 
@@ -7,6 +8,14 @@ function notFound(req, res, next) {
 
 function errorHandler(err, req, res, next) {
   if (res.headersSent) return next(err);
+
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      success: false,
+      message: err.errors[0]?.message || 'Validation error',
+      errors: err.errors.map((e) => ({ field: e.path.join('.'), message: e.message })),
+    });
+  }
 
   const statusCode = err instanceof ApiError ? err.statusCode : 500;
   const message = err instanceof ApiError ? err.message : 'Internal Server Error';

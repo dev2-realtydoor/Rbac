@@ -1,5 +1,9 @@
 const { success } = require('../../utils/ApiResponse');
 const service = require('./partners.service');
+const { updateProfileSchema } = require('./partners.validator');
+const ApiError = require('../../utils/ApiError');
+
+const VALID_LISTING_STATUSES = ['PENDING_APPROVAL', 'APPROVED', 'REJECTED'];
 
 async function submitKyc(req, res, next) {
   try {
@@ -18,7 +22,8 @@ async function getProfile(req, res, next) {
 
 async function updateProfile(req, res, next) {
   try {
-    const profile = await service.updateProfile(req.user.id, req.body);
+    const data = updateProfileSchema.parse(req.body);
+    const profile = await service.updateProfile(req.user.id, data);
     success(res, profile, 'Profile updated');
   } catch (err) { next(err); }
 }
@@ -32,7 +37,11 @@ async function getListing(req, res, next) {
 
 async function getMyListings(req, res, next) {
   try {
-    const listings = await service.getMyListings(req.user.id, req.query.status);
+    const { status } = req.query;
+    if (status && !VALID_LISTING_STATUSES.includes(status)) {
+      throw new ApiError(400, `Invalid status. Must be one of: ${VALID_LISTING_STATUSES.join(', ')}`);
+    }
+    const listings = await service.getMyListings(req.user.id, status);
     success(res, listings);
   } catch (err) { next(err); }
 }

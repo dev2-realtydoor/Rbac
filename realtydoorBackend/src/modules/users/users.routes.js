@@ -8,6 +8,9 @@ const { otpLimiter } = require('../../middleware/rateLimiter');
 
 router.use(authenticate, requireUser);
 
+// Profile
+router.patch('/profile', ctrl.updateProfile);
+
 // Phone verification (lazy — only called when needed)
 router.post('/verify-phone',     otpLimiter, ctrl.requestPhoneOtp);
 router.post('/verify-phone/otp', otpLimiter, ctrl.verifyPhoneOtp);
@@ -16,6 +19,7 @@ router.post('/verify-phone/otp', otpLimiter, ctrl.verifyPhoneOtp);
 router.get('/leads', ctrl.getMyLeads);
 
 // Favorites (phone required — PRD §2.5)
+router.get('/favorites',  ctrl.getFavorites);
 router.post('/favorites', requirePhone, ctrl.toggleFavorite);
 
 // Document vault
@@ -26,7 +30,9 @@ router.post('/documents', requirePhone, userDocUploader.single('file'), ctrl.upl
 router.get('/subscriptions', ctrl.getSubscriptions);
 
 // Tickets
-router.post('/tickets', requirePhone, ctrl.raiseTicket);
+router.get('/tickets',              ctrl.getMyTickets);
+router.get('/tickets/:id',          ctrl.getMyTicketById);
+router.post('/tickets',             requirePhone, ctrl.raiseTicket);
 router.patch('/tickets/:id/verify', ctrl.verifyTicket);
 
 // Loan applications

@@ -20,14 +20,7 @@ async function createEscrowOrder(amountInPaise, receipt) {
     amount: amountInPaise,
     currency: 'INR',
     receipt,
-    transfers: [
-      {
-        account: process.env.RAZORPAY_ROUTE_ACCOUNT_ID,
-        amount: amountInPaise,
-        currency: 'INR',
-        on_hold: true,
-      },
-    ],
+    notes: { type: 'escrow' },
   });
 }
 

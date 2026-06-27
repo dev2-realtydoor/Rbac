@@ -3,6 +3,7 @@ const ApiError = require('../../utils/ApiError');
 const { createEscrowOrder, releaseEscrow, refundPayment } = require('../../lib/razorpay');
 const { createAuditLog } = require('../../lib/auditLog');
 const { createNotification } = require('../../lib/notifications');
+const { sendEscrowRefunded } = require('../../lib/email');
 
 async function createOrder(leadId, buyerId, amountInRupees) {
   const lead = await prisma.lead.findUnique({ where: { id: leadId } });
@@ -30,6 +31,9 @@ async function createOrder(leadId, buyerId, amountInRupees) {
 }
 
 async function confirmPayment(razorpayOrderId, razorpayPaymentId) {
+  const escrow = await prisma.escrowTransaction.findUnique({ where: { razorpayOrderId } });
+  if (!escrow) throw new ApiError(404, 'Escrow order not found');
+  if (escrow.status === 'HELD') return escrow;
   return prisma.escrowTransaction.update({
     where: { razorpayOrderId },
     data: { razorpayPaymentId, status: 'HELD', heldAt: new Date() },
@@ -45,8 +49,10 @@ async function release(escrowId, adminId, releaseData, ip) {
   if (!escrow.razorpayPaymentId) throw new ApiError(400, 'Payment not yet captured');
 
   const amountInPaise = Math.round(escrow.amount * 100);
+  let transferId = null;
   if (sellerAccountId) {
-    await releaseEscrow(escrow.razorpayPaymentId, sellerAccountId, amountInPaise);
+    const transferResult = await releaseEscrow(escrow.razorpayPaymentId, sellerAccountId, amountInPaise);
+    transferId = transferResult?.items?.[0]?.id ?? null;
   }
 
   const parts = [];
@@ -57,7 +63,13 @@ async function release(escrowId, adminId, releaseData, ip) {
 
   const updated = await prisma.escrowTransaction.update({
     where: { id: escrowId },
-    data: { status: 'RELEASED', releasedAt: new Date(), releasedByAdminId: adminId, adminNote },
+    data: {
+      status: 'RELEASED',
+      releasedAt: new Date(),
+      releasedByAdminId: adminId,
+      adminNote,
+      ...(transferId && { razorpayTransferId: transferId }),
+    },
   });
 
   await createAuditLog({
@@ -93,6 +105,9 @@ async function refund(escrowId, adminId, ip) {
     message: 'Your token advance has been refunded to your original payment method.',
     type: 'ESCROW_REFUNDED',
   });
+
+  const buyer = await prisma.user.findUnique({ where: { id: escrow.buyerId }, select: { email: true } });
+  if (buyer) sendEscrowRefunded(buyer.email, escrow.amount).catch(() => {});
 
   return updated;
 }

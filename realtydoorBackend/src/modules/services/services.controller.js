@@ -1,5 +1,7 @@
 const { success, created } = require('../../utils/ApiResponse');
 const service = require('./services.service');
+const { verifyPaymentSignature } = require('../../lib/razorpay');
+const ApiError = require('../../utils/ApiError');
 
 async function getAll(req, res, next) {
   try {
@@ -16,4 +18,18 @@ async function createOrder(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getAll, createOrder };
+async function verifyPayment(req, res, next) {
+  try {
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      throw new ApiError(400, 'razorpayOrderId, razorpayPaymentId and razorpaySignature are required');
+    }
+    if (!verifyPaymentSignature(razorpayOrderId, razorpayPaymentId, razorpaySignature)) {
+      throw new ApiError(400, 'Invalid payment signature');
+    }
+    const subscription = await service.confirmServicePayment(razorpayOrderId, razorpayPaymentId);
+    success(res, subscription, 'Payment verified');
+  } catch (err) { next(err); }
+}
+
+module.exports = { getAll, createOrder, verifyPayment };

@@ -5,6 +5,7 @@ const { requireUser } = require('../../middleware/requireRole');
 const { requirePhone } = require('../../middleware/requirePhone');
 
 // Buyer creates escrow order (token advance payment)
-router.post('/create-order', authenticate, requireUser, requirePhone, ctrl.createOrder);
+router.post('/create-order',    authenticate, requireUser, requirePhone, ctrl.createOrder);
+router.post('/verify-payment',  authenticate, requireUser, ctrl.verifyPayment);
 
 module.exports = router;

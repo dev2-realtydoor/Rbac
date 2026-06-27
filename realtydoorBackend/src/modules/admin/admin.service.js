@@ -2,12 +2,30 @@ const prisma = require('../../lib/prisma');
 const ApiError = require('../../utils/ApiError');
 const { createNotification } = require('../../lib/notifications');
 const { createAuditLog } = require('../../lib/auditLog');
-const { sendPropertyApproved, sendPropertyRejected, sendKycVerified } = require('../../lib/email');
+const {
+  sendPropertyApproved, sendPropertyRejected,
+  sendKycVerified, sendKycRejected,
+  sendLeadAssigned, sendLeadInquiryConfirmed,
+  sendLoanStatusUpdate,
+} = require('../../lib/email');
 const { sendLeadAssignedNotice } = require('../../lib/wati');
 const { setUserRole } = require('../../lib/clerkAdmin');
 const logger = require('../../lib/logger');
 
 // ─── LEAD MANAGEMENT ─────────────────────────────────────────────────────────
+
+async function getLeadById(leadId) {
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    include: {
+      property:        { select: { title: true, slug: true, city: true, locality: true } },
+      assignedPartner: { select: { name: true, email: true, phone: true, companyName: true } },
+      escrowTransactions: { orderBy: { createdAt: 'desc' } },
+    },
+  });
+  if (!lead) throw new ApiError(404, 'Lead not found');
+  return lead;
+}
 
 async function getAllLeads(filters, skip, limit) {
   const where = {};
@@ -30,8 +48,15 @@ async function getAllLeads(filters, skip, limit) {
 }
 
 async function assignLead(leadId, partnerId, adminId, ip) {
-  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  const lead = await prisma.lead.findUnique({
+    where: { id: leadId },
+    include: { property: { select: { title: true } } },
+  });
   if (!lead) throw new ApiError(404, 'Lead not found');
+  if (lead.assignedPartnerId) throw new ApiError(409, 'Lead is already assigned to a partner');
+  if (['CLOSED', 'DROPPED'].includes(lead.status)) {
+    throw new ApiError(400, `Cannot assign a ${lead.status.toLowerCase()} lead`);
+  }
 
   const partner = await prisma.user.findFirst({ where: { id: partnerId, role: 'PARTNER', kycStatus: 'VERIFIED' } });
   if (!partner) throw new ApiError(400, 'Partner not found or not KYC verified');
@@ -55,8 +80,21 @@ async function assignLead(leadId, partnerId, adminId, ip) {
     ipAddress: ip,
   });
 
-  // WhatsApp notice to partner (best-effort)
+  // Partner: WhatsApp + email
   sendLeadAssignedNotice(partner.phone, partner.name).catch(() => {});
+  sendLeadAssigned(partner.email, { buyerName: lead.buyerName, propertyTitle: lead.property.title }).catch(() => {});
+
+  // Buyer: in-app notification (if registered) + email
+  if (lead.buyerId) {
+    await createNotification({
+      userId: lead.buyerId,
+      title: 'Your Inquiry is Being Processed',
+      message: `Your inquiry for "${lead.property.title}" has been matched with a verified partner. You will be contacted shortly.`,
+      type: 'LEAD_ASSIGNED',
+      linkUrl: '/dashboard/leads',
+    });
+  }
+  sendLeadInquiryConfirmed(lead.buyerEmail, lead.property.title).catch(() => {});
 
   return updated;
 }
@@ -157,13 +195,14 @@ async function verifyKyc(userId, action, note, adminId, ip) {
 
   const kycStatus = action === 'APPROVE' ? 'VERIFIED' : 'REJECTED';
 
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { id: userId },
     data: {
       kycStatus,
       kycVerifiedAt: action === 'APPROVE' ? new Date() : null,
       kycRejectionNote: note || null,
     },
+    select: { id: true, name: true, email: true, kycStatus: true, kycVerifiedAt: true, kycRejectionNote: true },
   });
 
   await createNotification({
@@ -181,7 +220,13 @@ async function verifyKyc(userId, action, note, adminId, ip) {
     after: { kycStatus }, ipAddress: ip,
   });
 
-  if (action === 'APPROVE') sendKycVerified(user.email).catch(() => {});
+  if (action === 'APPROVE') {
+    sendKycVerified(user.email).catch(() => {});
+  } else {
+    sendKycRejected(user.email, note).catch(() => {});
+  }
+
+  return updated;
 }
 
 // ─── REVENUE DASHBOARD ───────────────────────────────────────────────────────
@@ -205,9 +250,9 @@ async function getRevenueSummary() {
   ]);
 
   return {
-    escrowHeld:       { amount: escrowHeld._sum.amount || 0,          count: escrowHeld._count },
-    escrowReleasedMTD:{ amount: escrowReleased._sum.amount || 0,       count: escrowReleased._count },
-    serviceRevenueMTD:{ amount: servicesRevenue._sum.amountPaid || 0,  count: servicesRevenue._count },
+    escrowHeld:        { amount: escrowHeld._sum.amount || 0,         count: escrowHeld._count },
+    escrowReleasedMTD: { amount: escrowReleased._sum.amount || 0,      count: escrowReleased._count },
+    serviceRevenueMTD: { amount: servicesRevenue._sum.amountPaid || 0, count: servicesRevenue._count },
     closedLeadsMTD: closedLeads,
     totalLeads,
   };
@@ -222,7 +267,6 @@ async function editProperty(propertyId, data, adminId, adminName, ip) {
   const FORBIDDEN = ['partnerId', 'slug'];
   FORBIDDEN.forEach((f) => delete data[f]);
 
-  // Build per-field edit logs for every changed value
   const editLogRows = Object.entries(data)
     .filter(([field, newVal]) => String(property[field] ?? '') !== String(newVal ?? ''))
     .map(([field, newVal]) => ({
@@ -263,8 +307,8 @@ async function editProperty(propertyId, data, adminId, adminName, ip) {
 
 async function getAllLoans(filters, skip, limit) {
   const where = {};
-  if (filters.status)   where.status   = filters.status;
-  if (filters.userId)   where.userId   = filters.userId;
+  if (filters.status) where.status = filters.status;
+  if (filters.userId) where.userId = filters.userId;
 
   const [data, total] = await Promise.all([
     prisma.loanApplication.findMany({
@@ -281,7 +325,10 @@ async function getAllLoans(filters, skip, limit) {
 }
 
 async function updateLoanStatus(loanId, status, adminNote, adminId) {
-  const loan = await prisma.loanApplication.findUnique({ where: { id: loanId } });
+  const loan = await prisma.loanApplication.findUnique({
+    where: { id: loanId },
+    include: { user: { select: { email: true } } },
+  });
   if (!loan) throw new ApiError(404, 'Loan application not found');
 
   const extraFields = {};
@@ -296,10 +343,12 @@ async function updateLoanStatus(loanId, status, adminNote, adminId) {
   await createNotification({
     userId:  loan.userId,
     title:   'Loan Application Update',
-    message: `Your loan application status has been updated to ${status}.`,
+    message: `Your loan application status has been updated to ${status.replace(/_/g, ' ')}.`,
     type:    'LOAN_STATUS_UPDATE',
     linkUrl: `/dashboard/loan/${loanId}`,
   });
+
+  sendLoanStatusUpdate(loan.user.email, status, adminNote).catch(() => {});
 
   return updated;
 }
@@ -308,8 +357,8 @@ async function updateLoanStatus(loanId, status, adminNote, adminId) {
 
 async function getAllUsers(filters, skip, limit) {
   const where = {};
-  if (filters.role)   where.role  = filters.role;
-  if (filters.search) where.OR    = [
+  if (filters.role)   where.role = filters.role;
+  if (filters.search) where.OR   = [
     { name:  { contains: filters.search, mode: 'insensitive' } },
     { email: { contains: filters.search, mode: 'insensitive' } },
   ];
@@ -327,6 +376,8 @@ async function getAllUsers(filters, skip, limit) {
 }
 
 async function changeUserRole(targetUserId, newRole, adminId, ip) {
+  if (targetUserId === adminId) throw new ApiError(400, 'Cannot change your own role');
+
   const VALID_ROLES = ['USER', 'PARTNER', 'ADMIN'];
   if (!VALID_ROLES.includes(newRole)) throw new ApiError(400, 'Invalid role');
 
@@ -339,7 +390,6 @@ async function changeUserRole(targetUserId, newRole, adminId, ip) {
     select: { id: true, name: true, email: true, role: true, clerkId: true },
   });
 
-  // Sync role to Clerk publicMetadata so the JWT Template reflects the new role immediately
   await setUserRole(user.clerkId, newRole).catch((err) =>
     logger.warn('[changeUserRole] Clerk publicMetadata sync failed', { clerkId: user.clerkId, error: err.message })
   );
@@ -353,11 +403,106 @@ async function changeUserRole(targetUserId, newRole, adminId, ip) {
   return updated;
 }
 
+// ─── TICKET MANAGEMENT ───────────────────────────────────────────────────────
+
+async function getAllTickets(filters, skip, limit) {
+  const where = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.userId) where.userId = filters.userId;
+
+  const [data, total] = await Promise.all([
+    prisma.serviceTicket.findMany({
+      where, skip, take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user:         { select: { name: true, email: true, phone: true } },
+        subscription: { include: { service: { select: { name: true } } } },
+      },
+    }),
+    prisma.serviceTicket.count({ where }),
+  ]);
+  return { data, total };
+}
+
+const TICKET_TRANSITIONS = {
+  OPEN:             ['IN_PROGRESS'],
+  IN_PROGRESS:      ['RESOLVED', 'OPEN'],
+  RESOLVED:         ['IN_PROGRESS'],
+  VERIFIED_BY_USER: [],
+};
+
+async function updateTicketStatus(ticketId, status) {
+  const ticket = await prisma.serviceTicket.findUnique({ where: { id: ticketId } });
+  if (!ticket) throw new ApiError(404, 'Ticket not found');
+
+  const allowed = TICKET_TRANSITIONS[ticket.status] ?? [];
+  if (!allowed.includes(status)) {
+    throw new ApiError(400, `Cannot transition ticket from ${ticket.status} to ${status}`);
+  }
+
+  return prisma.serviceTicket.update({
+    where: { id: ticketId },
+    data:  { status },
+  });
+}
+
+// ─── AUDIT LOGS ──────────────────────────────────────────────────────────────
+
+async function getAuditLogs(filters, skip, limit) {
+  const where = {};
+  if (filters.action)     where.action     = filters.action;
+  if (filters.adminId)    where.adminId    = filters.adminId;
+  if (filters.targetType) where.targetType = filters.targetType;
+  if (filters.targetId)   where.targetId   = filters.targetId;
+  if (filters.from || filters.to) {
+    where.createdAt = {};
+    if (filters.from) where.createdAt.gte = new Date(filters.from);
+    if (filters.to)   where.createdAt.lte = new Date(filters.to);
+  }
+
+  const [data, total] = await Promise.all([
+    prisma.auditLog.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }),
+    prisma.auditLog.count({ where }),
+  ]);
+  return { data, total };
+}
+
+// ─── PARTNER METRICS ─────────────────────────────────────────────────────────
+
+async function getPartnerMetrics(skip, limit) {
+  const [partners, total] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: 'PARTNER', kycStatus: 'VERIFIED' },
+      skip, take: limit,
+      select: {
+        id: true, name: true, companyName: true, partnerSubType: true,
+        assignedLeads: { select: { status: true } },
+        properties:    { select: { publishStatus: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.user.count({ where: { role: 'PARTNER', kycStatus: 'VERIFIED' } }),
+  ]);
+
+  const data = partners.map((p) => ({
+    id: p.id, name: p.name, companyName: p.companyName, partnerSubType: p.partnerSubType,
+    totalLeads:    p.assignedLeads.length,
+    closedLeads:   p.assignedLeads.filter((l) => l.status === 'CLOSED').length,
+    totalListings: p.properties.length,
+    activeListings: p.properties.filter((l) => l.publishStatus === 'APPROVED').length,
+  }));
+
+  return { data, total };
+}
+
 module.exports = {
-  getAllLeads, assignLead,
+  getLeadById, getAllLeads, assignLead,
   getPendingProperties, approveProperty, rejectProperty, editProperty,
   getPendingKyc, verifyKyc,
   getRevenueSummary,
+  getAuditLogs,
+  getAllTickets, updateTicketStatus,
   getAllLoans, updateLoanStatus,
   getAllUsers, changeUserRole,
+  getPartnerMetrics,
 };

@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('./logger');
 
 const client = axios.create({
   baseURL: process.env.WATI_API_ENDPOINT,
@@ -21,7 +22,7 @@ async function sendTemplateMessage(phone, templateName, parameters = []) {
   } catch (err) {
     const status = err.response?.status;
     const data   = JSON.stringify(err.response?.data);
-    console.error(`[WATI] ${templateName} → ${phone} failed: HTTP ${status} — ${data}`);
+    logger.error(`[WATI] ${templateName} → ${phone} failed: HTTP ${status} — ${data}`);
     throw err;
   }
 }

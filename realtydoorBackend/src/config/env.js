@@ -12,6 +12,7 @@ const envSchema = z.object({
   RAZORPAY_ROUTE_ACCOUNT_ID: z.string().min(1),
   WATI_API_ENDPOINT: z.string().url(),
   WATI_ACCESS_TOKEN: z.string().min(1),
+  WATI_WEBHOOK_TOKEN: z.string().optional(),
   AWS_ACCESS_KEY_ID: z.string().min(1),
   AWS_SECRET_ACCESS_KEY: z.string().min(1),
   AWS_REGION: z.string().min(1),

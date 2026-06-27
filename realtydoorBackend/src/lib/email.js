@@ -47,10 +47,56 @@ async function sendServiceActivated(email, serviceName) {
   });
 }
 
+async function sendKycRejected(email, note) {
+  return send({
+    to: email,
+    subject: 'KYC Verification — Action Required',
+    html: `<p>Your KYC documents could not be verified. Reason: <em>${note}</em>. Please re-submit with the correct documents from your partner profile.</p>`,
+  });
+}
+
+async function sendEscrowRefunded(email, amount) {
+  return send({
+    to: email,
+    subject: 'Token Advance Refunded',
+    html: `<p>Your token advance of <strong>₹${Number(amount).toLocaleString('en-IN')}</strong> has been refunded to your original payment method. It may take 5–7 business days to reflect.</p>`,
+  });
+}
+
+async function sendEscrowPaymentFailed(email) {
+  return send({
+    to: email,
+    subject: 'Token Advance Payment Failed',
+    html: `<p>Your token advance payment could not be processed. Please retry from your dashboard or contact support if the issue persists.</p>`,
+  });
+}
+
+async function sendLoanStatusUpdate(email, status, note) {
+  const readableStatus = status.replace(/_/g, ' ');
+  return send({
+    to: email,
+    subject: `Loan Application Update — ${readableStatus}`,
+    html: `<p>Your loan application status has been updated to <strong>${readableStatus}</strong>.${note ? ` Admin note: <em>${note}</em>.` : ''} Log in to your dashboard for full details.</p>`,
+  });
+}
+
+async function sendLeadInquiryConfirmed(email, propertyTitle) {
+  return send({
+    to: email,
+    subject: `Your Inquiry for "${propertyTitle}" is Being Processed`,
+    html: `<p>Great news! Your inquiry for <strong>${propertyTitle}</strong> has been assigned to one of our verified partners. You will be contacted shortly to schedule a site visit.</p>`,
+  });
+}
+
 module.exports = {
   sendLeadAssigned,
   sendPropertyApproved,
   sendPropertyRejected,
   sendKycVerified,
   sendServiceActivated,
+  sendKycRejected,
+  sendEscrowRefunded,
+  sendEscrowPaymentFailed,
+  sendLoanStatusUpdate,
+  sendLeadInquiryConfirmed,
 };

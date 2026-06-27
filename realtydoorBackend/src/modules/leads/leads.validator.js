@@ -1,16 +1,19 @@
 const { z } = require('zod');
-const { indianPhone } = require('../../utils/validators');
+const { indianPhone, objectId } = require('../../utils/validators');
 
 const submitLeadSchema = z.object({
-  propertyId: z.string().min(1),
-  buyerName: z.string().min(2).max(100),
-  buyerEmail: z.string().email(),
-  buyerPhone: indianPhone,
+  propertyId:   objectId,
+  buyerName:    z.string().min(2).max(100),
+  buyerEmail:   z.string().email(),
+  buyerPhone:   indianPhone,
   buyerMessage: z.string().max(500).optional(),
 });
 
 const scheduleVisitSchema = z.object({
-  scheduledAt: z.string().datetime(),
+  scheduledAt: z.string().datetime().refine(
+    (d) => new Date(d) > new Date(),
+    { message: 'Visit must be scheduled in the future' }
+  ),
 });
 
 const verifyOtpSchema = z.object({
@@ -22,4 +25,8 @@ const uploadDocsSchema = z.object({
   partnerNotes: z.string().max(1000).optional(),
 });
 
-module.exports = { submitLeadSchema, scheduleVisitSchema, verifyOtpSchema, uploadDocsSchema };
+const requestDropSchema = z.object({
+  reason: z.string().min(5, 'Please provide a meaningful reason (min 5 characters)').max(500),
+});
+
+module.exports = { submitLeadSchema, scheduleVisitSchema, verifyOtpSchema, uploadDocsSchema, requestDropSchema };

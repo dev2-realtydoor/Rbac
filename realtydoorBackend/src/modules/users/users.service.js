@@ -2,6 +2,7 @@ const prisma = require('../../lib/prisma');
 const ApiError = require('../../utils/ApiError');
 const { sendPhoneVerificationOtp } = require('../../lib/wati');
 const { generate, expiresAt, isExpired, isLocked, lockUntil, maxAttemptsReached, MAX_ATTEMPTS } = require('../../lib/otp');
+const logger = require('../../lib/logger');
 
 async function requestPhoneOtp(userId, phone) {
   const duplicate = await prisma.user.findFirst({ where: { phone, NOT: { id: userId } } });
@@ -29,7 +30,7 @@ async function requestPhoneOtp(userId, phone) {
     await sendPhoneVerificationOtp(phone, otp);
   } catch (err) {
     if (process.env.NODE_ENV === 'production') throw err;
-    console.warn(`[DEV] WATI send failed — OTP for ${phone}: ${otp}`);
+    logger.warn(`[DEV] WATI send failed — OTP for ${phone}: ${otp}`);
   }
   const dev = process.env.NODE_ENV !== 'production';
   return { message: 'OTP sent via WhatsApp', ...(dev && { _devOtp: otp }) };
@@ -85,6 +86,9 @@ async function getMyLeads(userId) {
 }
 
 async function toggleFavorite(userId, propertyId) {
+  const property = await prisma.property.findUnique({ where: { id: propertyId }, select: { id: true } });
+  if (!property) throw new ApiError(404, 'Property not found');
+
   const existing = await prisma.favorite.findFirst({ where: { userId, propertyId } });
   if (existing) {
     await prisma.favorite.delete({ where: { id: existing.id } });
@@ -92,6 +96,35 @@ async function toggleFavorite(userId, propertyId) {
   }
   await prisma.favorite.create({ data: { userId, propertyId } });
   return { favorited: true };
+}
+
+async function getFavorites(userId) {
+  const favs = await prisma.favorite.findMany({
+    where: { userId },
+    include: {
+      property: {
+        select: {
+          id: true, title: true, slug: true, price: true, monthlyRent: true,
+          propertyType: true, listingType: true, bhk: true, locality: true,
+          city: true, images: true, coverImageIndex: true, isVerified: true,
+          publishStatus: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  return favs.map((f) => ({ ...f.property, favoritedAt: f.createdAt }));
+}
+
+async function updateProfile(userId, data) {
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: {
+      id: true, name: true, email: true, phone: true, phoneVerified: true,
+      isNRI: true, profileImageUrl: true, role: true, updatedAt: true,
+    },
+  });
 }
 
 function serializeDoc(doc) {
@@ -114,7 +147,7 @@ async function getSubscriptions(userId) {
   return prisma.userSubscription.findMany({
     where: { userId },
     include: { tickets: { orderBy: { createdAt: 'desc' } } },
-    orderBy: { startDate: 'desc' },
+    orderBy: { createdAt: 'desc' },
   });
 }
 
@@ -123,9 +156,27 @@ async function raiseTicket(userId, subscriptionId, data) {
   if (!sub) throw new ApiError(404, 'Subscription not found');
   if (sub.paymentStatus !== 'SUCCESS') throw new ApiError(400, 'Service not active');
 
+  const { subscriptionId: _sid, ...rest } = data;
   return prisma.serviceTicket.create({
-    data: { ...data, userId, subscriptionId },
+    data: { ...rest, userId, subscriptionId },
   });
+}
+
+async function getMyTickets(userId) {
+  return prisma.serviceTicket.findMany({
+    where: { userId },
+    include: { subscription: { include: { service: { select: { name: true } } } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+async function getMyTicketById(userId, ticketId) {
+  const ticket = await prisma.serviceTicket.findFirst({
+    where: { id: ticketId, userId },
+    include: { subscription: { include: { service: { select: { name: true } } } } },
+  });
+  if (!ticket) throw new ApiError(404, 'Ticket not found');
+  return ticket;
 }
 
 async function verifyTicket(userId, ticketId) {
@@ -159,4 +210,4 @@ async function getLoanApplicationById(userId, loanId) {
   return loan;
 }
 
-module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getDocuments, uploadDocument, getSubscriptions, raiseTicket, verifyTicket, createLoanApplication, getMyLoanApplications, getLoanApplicationById };
+module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile, getDocuments, uploadDocument, getSubscriptions, raiseTicket, getMyTickets, getMyTicketById, verifyTicket, createLoanApplication, getMyLoanApplications, getLoanApplicationById };

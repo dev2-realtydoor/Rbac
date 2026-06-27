@@ -13,11 +13,8 @@ async function createServiceOrder(userId, serviceId) {
   const service = await prisma.service.findUnique({ where: { id: serviceId, isActive: true } });
   if (!service) throw new ApiError(404, 'Service not found');
 
-  const endDate = new Date();
-  endDate.setFullYear(endDate.getFullYear() + 1); // 1-year subscription
-
   const amountInPaise = Math.round(service.price * 100);
-  const order = await createOrder(amountInPaise, `svc_${userId}_${serviceId}`);
+  const order = await createOrder(amountInPaise, `svc_${Date.now()}`);
 
   const subscription = await prisma.userSubscription.create({
     data: {
@@ -26,11 +23,25 @@ async function createServiceOrder(userId, serviceId) {
       razorpayOrderId: order.id,
       paymentStatus: 'PENDING',
       amountPaid: service.price,
-      endDate,
     },
   });
 
   return { subscription, razorpayOrder: order, key: process.env.RAZORPAY_KEY_ID };
 }
 
-module.exports = { getAllServices, createServiceOrder };
+async function confirmServicePayment(orderId, paymentId) {
+  const subscription = await prisma.userSubscription.findUnique({ where: { razorpayOrderId: orderId } });
+  if (!subscription) throw new ApiError(404, 'Subscription not found');
+  if (subscription.paymentStatus === 'SUCCESS') return subscription;
+
+  const now = new Date();
+  const endDate = new Date(now);
+  endDate.setFullYear(endDate.getFullYear() + 1);
+
+  return prisma.userSubscription.update({
+    where: { razorpayOrderId: orderId },
+    data: { paymentStatus: 'SUCCESS', razorpayPaymentId: paymentId, startDate: now, endDate },
+  });
+}
+
+module.exports = { getAllServices, createServiceOrder, confirmServicePayment };

@@ -1,7 +1,22 @@
 const { success } = require('../../utils/ApiResponse');
 const { parsePagination, paginate } = require('../../utils/pagination');
 const service = require('./admin.service');
-const prisma = require('../../lib/prisma');
+const {
+  assignLeadSchema,
+  rejectPropertySchema,
+  verifyKycSchema,
+  updateLoanStatusSchema,
+  changeUserRoleSchema,
+  editPropertySchema,
+  updateTicketSchema,
+} = require('./admin.validator');
+
+async function getLeadById(req, res, next) {
+  try {
+    const lead = await service.getLeadById(req.params.id);
+    success(res, lead);
+  } catch (err) { next(err); }
+}
 
 async function getLeads(req, res, next) {
   try {
@@ -13,7 +28,7 @@ async function getLeads(req, res, next) {
 
 async function assignLead(req, res, next) {
   try {
-    const { partnerId } = req.body;
+    const { partnerId } = assignLeadSchema.parse(req.body);
     const lead = await service.assignLead(req.params.id, partnerId, req.user.id, req.ip);
     success(res, lead, 'Lead assigned');
   } catch (err) { next(err); }
@@ -36,7 +51,7 @@ async function approveProperty(req, res, next) {
 
 async function rejectProperty(req, res, next) {
   try {
-    const { note } = req.body;
+    const { note } = rejectPropertySchema.parse(req.body);
     const property = await service.rejectProperty(req.params.id, note, req.user.id, req.ip);
     success(res, property, 'Property rejected');
   } catch (err) { next(err); }
@@ -52,9 +67,9 @@ async function getPendingKyc(req, res, next) {
 
 async function verifyKyc(req, res, next) {
   try {
-    const { action, note } = req.body; // action: 'APPROVE' | 'REJECT'
-    await service.verifyKyc(req.params.userId, action, note, req.user.id, req.ip);
-    success(res, null, `KYC ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
+    const { action, note } = verifyKycSchema.parse(req.body);
+    const updated = await service.verifyKyc(req.params.userId, action, note, req.user.id, req.ip);
+    success(res, updated, `KYC ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
   } catch (err) { next(err); }
 }
 
@@ -68,32 +83,16 @@ async function getRevenue(req, res, next) {
 async function getAuditLogs(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const [data, total] = await Promise.all([
-      prisma.auditLog.findMany({ skip, take: limit, orderBy: { createdAt: 'desc' } }),
-      prisma.auditLog.count(),
-    ]);
+    const { data, total } = await service.getAuditLogs(req.query, skip, limit);
     success(res, paginate(data, total, page, limit));
   } catch (err) { next(err); }
 }
 
 async function getPartnerMetrics(req, res, next) {
   try {
-    const partners = await prisma.user.findMany({
-      where: { role: 'PARTNER', kycStatus: 'VERIFIED' },
-      select: {
-        id: true, name: true, email: true, companyName: true, partnerSubType: true,
-        assignedLeads: { select: { status: true } },
-        properties: { select: { publishStatus: true } },
-      },
-    });
-    const metrics = partners.map((p) => ({
-      id: p.id, name: p.name, companyName: p.companyName, partnerSubType: p.partnerSubType,
-      totalLeads: p.assignedLeads.length,
-      closedLeads: p.assignedLeads.filter((l) => l.status === 'CLOSED').length,
-      totalListings: p.properties.length,
-      activeListings: p.properties.filter((l) => l.publishStatus === 'APPROVED').length,
-    }));
-    success(res, metrics);
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.getPartnerMetrics(skip, limit);
+    success(res, paginate(data, total, page, limit));
   } catch (err) { next(err); }
 }
 
@@ -107,7 +106,7 @@ async function getUsers(req, res, next) {
 
 async function changeUserRole(req, res, next) {
   try {
-    const { role } = req.body;
+    const { role } = changeUserRoleSchema.parse(req.body);
     const updated = await service.changeUserRole(req.params.id, role, req.user.id, req.ip);
     success(res, updated, `Role updated to ${role}`);
   } catch (err) { next(err); }
@@ -115,8 +114,9 @@ async function changeUserRole(req, res, next) {
 
 async function editProperty(req, res, next) {
   try {
+    const data = editPropertySchema.parse(req.body);
     const property = await service.editProperty(
-      req.params.id, req.body, req.user.id, req.user.name, req.ip,
+      req.params.id, data, req.user.id, req.user.name, req.ip,
     );
     success(res, property, 'Property updated');
   } catch (err) { next(err); }
@@ -132,17 +132,34 @@ async function getLoans(req, res, next) {
 
 async function updateLoanStatus(req, res, next) {
   try {
-    const { status, adminNote } = req.body;
+    const { status, adminNote } = updateLoanStatusSchema.parse(req.body);
     const loan = await service.updateLoanStatus(req.params.id, status, adminNote, req.user.id);
     success(res, loan, 'Loan status updated');
   } catch (err) { next(err); }
 }
 
+async function getTickets(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.getAllTickets(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function updateTicket(req, res, next) {
+  try {
+    const { status } = updateTicketSchema.parse(req.body);
+    const ticket = await service.updateTicketStatus(req.params.id, status);
+    success(res, ticket, `Ticket ${status.toLowerCase().replace('_', ' ')}`);
+  } catch (err) { next(err); }
+}
+
 module.exports = {
-  getLeads, assignLead,
+  getLeadById, getLeads, assignLead,
   getPendingProperties, approveProperty, rejectProperty, editProperty,
   getPendingKyc, verifyKyc,
   getRevenue, getAuditLogs, getPartnerMetrics,
+  getTickets, updateTicket,
   getLoans, updateLoanStatus,
   getUsers, changeUserRole,
 };

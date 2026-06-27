@@ -1,7 +1,7 @@
 const { verifyWebhookSignature } = require('../../lib/razorpay');
 const { confirmPayment } = require('../escrow/escrow.service');
 const prisma = require('../../lib/prisma');
-const { sendServiceActivated } = require('../../lib/email');
+const { sendServiceActivated, sendEscrowPaymentFailed } = require('../../lib/email');
 const { createNotification } = require('../../lib/notifications');
 const logger = require('../../lib/logger');
 
@@ -18,18 +18,31 @@ async function razorpay(req, res) {
     if (event === 'payment.captured') {
       const { order_id: orderId, id: paymentId } = payload.payment.entity;
 
-      // Determine if this is an escrow or service payment
+      // Route: escrow payment
       const escrow = await prisma.escrowTransaction.findUnique({ where: { razorpayOrderId: orderId } });
       if (escrow) {
         await confirmPayment(orderId, paymentId);
         return res.json({ status: 'ok' });
       }
 
+      // Route: service subscription payment
       const subscription = await prisma.userSubscription.findUnique({ where: { razorpayOrderId: orderId } });
       if (subscription) {
+        // Idempotency: skip if already processed
+        if (subscription.paymentStatus === 'SUCCESS') return res.json({ status: 'ok' });
+
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setFullYear(endDate.getFullYear() + 1);
+
         await prisma.userSubscription.update({
           where: { razorpayOrderId: orderId },
-          data: { paymentStatus: 'SUCCESS', razorpayPaymentId: paymentId },
+          data: {
+            paymentStatus: 'SUCCESS',
+            razorpayPaymentId: paymentId,
+            startDate: now,
+            endDate,
+          },
         });
 
         const service = await prisma.service.findUnique({ where: { id: subscription.serviceId } });
@@ -65,13 +78,50 @@ async function razorpay(req, res) {
           where: { razorpayOrderId: orderId },
           data: { status: 'FAILED', failedAt: new Date() },
         });
+
+        await createNotification({
+          userId: escrow.buyerId,
+          title: 'Token Advance Payment Failed',
+          message: 'Your token advance payment could not be processed. Please retry from your dashboard.',
+          type: 'PAYMENT_FAILED',
+          linkUrl: '/dashboard/leads',
+        });
+
+        const buyer = await prisma.user.findUnique({ where: { id: escrow.buyerId }, select: { email: true } });
+        if (buyer) sendEscrowPaymentFailed(buyer.email).catch(() => {});
+
         return res.json({ status: 'ok' });
       }
 
-      await prisma.userSubscription.updateMany({
-        where: { razorpayOrderId: orderId },
-        data: { paymentStatus: 'FAILED' },
-      });
+      const failedSub = await prisma.userSubscription.findUnique({ where: { razorpayOrderId: orderId } });
+      if (failedSub) {
+        await prisma.userSubscription.update({
+          where: { razorpayOrderId: orderId },
+          data: { paymentStatus: 'FAILED' },
+        });
+        await createNotification({
+          userId: failedSub.userId,
+          title: 'Service Payment Failed',
+          message: 'Your service subscription payment could not be processed. Please retry from your dashboard.',
+          type: 'PAYMENT_FAILED',
+          linkUrl: '/dashboard/services',
+        });
+      }
+    }
+
+    if (event === 'transfer.settled') {
+      const { id: transferId } = payload.transfer.entity;
+      const escrow = await prisma.escrowTransaction.findFirst({ where: { razorpayTransferId: transferId } });
+      if (escrow) {
+        logger.info('[RazorpayWebhook] Escrow transfer settled', { transferId, escrowId: escrow.id });
+        await createNotification({
+          userId: escrow.buyerId,
+          title: 'Token Advance Transferred to Seller',
+          message: 'The token advance for your property deal has been successfully transferred to the seller.',
+          type: 'ESCROW_RELEASED',
+          linkUrl: '/dashboard/leads',
+        });
+      }
     }
   } catch (err) {
     logger.error('[RazorpayWebhook] Error processing event', { event, error: err.message });

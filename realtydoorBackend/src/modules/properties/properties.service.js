@@ -94,6 +94,12 @@ async function updateProperty(id, partnerId, data) {
   const FORBIDDEN = ['publishStatus', 'isVerified', 'partnerId'];
   FORBIDDEN.forEach((f) => delete data[f]);
 
+  // Re-trigger admin review so edited content doesn't go live unreviewed
+  if (property.publishStatus === 'APPROVED') {
+    data.publishStatus = 'PENDING_APPROVAL';
+    data.rejectionNote = null;
+  }
+
   return prisma.property.update({ where: { id }, data });
 }
 

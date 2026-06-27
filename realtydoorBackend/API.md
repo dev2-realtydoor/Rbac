@@ -459,6 +459,24 @@ Upload images to a listing.
 
 ---
 
+### POST /api/properties/:id/videos
+
+Upload videos to a listing.
+
+**Auth:** PARTNER (KYC not required)
+
+**Request:** `multipart/form-data`, field name `videos`, up to 5 files.
+
+**Response `200`:**
+
+```json
+{ "success": true, "message": "Videos uploaded", "data": { "videos": ["url1", "url2"] } }
+```
+
+**Errors:** `400` no videos provided · `403` not your listing.
+
+---
+
 ## 3. Leads
 
 ### POST /api/leads
@@ -656,6 +674,28 @@ Upload visit notes and files for a lead.
 
 ---
 
+### PATCH /api/leads/partner/:id/request-drop
+
+Request to drop/abandon a lead. Requires admin approval before the lead is actually dropped.
+
+**Auth:** PARTNER + KYC verified
+
+**Request Body:** _(none)_
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Drop request submitted",
+  "data": { "id": "64lead...", "status": "DROP_REQUESTED" }
+}
+```
+
+**Errors:** `400` lead already closed or dropped · `404` not found or not assigned to partner.
+
+---
+
 ### PATCH /api/leads/partner/:id/close
 
 Mark lead as closed. Requires an escrow with `status: HELD` and a captured payment. Irreversible by partner.
@@ -734,6 +774,32 @@ Verify the 4-digit OTP to confirm phone ownership.
 
 ---
 
+### PATCH /api/user/profile
+
+Update display name and NRI flag.
+
+**Auth:** USER
+
+**Request Body:**
+
+```json
+{ "name": "Suresh Mehta", "isNRI": false }
+```
+
+Both fields are optional. At least one must be provided.
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Profile updated",
+  "data": { "id": "64user...", "name": "Suresh Mehta", "isNRI": false }
+}
+```
+
+---
+
 ### GET /api/user/leads
 
 All inquiries submitted by the authenticated user.
@@ -756,6 +822,37 @@ All inquiries submitted by the authenticated user.
         "title": "3 BHK Flat in Baner",
         "slug": "3-bhk-flat-in-baner-...",
         "city": "Pune",
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+      }
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/user/favorites
+
+All properties the user has saved.
+
+**Auth:** USER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64fav...",
+      "propertyId": "64prop...",
+      "createdAt": "2024-01-12T00:00:00.000Z",
+      "property": {
+        "title": "3 BHK Flat in Baner",
+        "slug": "3-bhk-flat-in-baner-...",
+        "city": "Pune",
+        "price": 8500000,
         "images": ["https://cdn.realtydoor.in/prop1.jpg"]
       }
     }
@@ -878,6 +975,61 @@ All service subscriptions with associated tickets.
   ]
 }
 ```
+
+---
+
+### GET /api/user/tickets
+
+All support tickets raised by the authenticated user.
+
+**Auth:** USER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64tkt...",
+      "subject": "Plumbing leak in bathroom",
+      "status": "IN_PROGRESS",
+      "priority": "HIGH",
+      "createdAt": "2024-02-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/user/tickets/:id
+
+Single ticket detail (must belong to authenticated user).
+
+**Auth:** USER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64tkt...",
+    "subject": "Plumbing leak in bathroom",
+    "description": "Slow leak under the wash basin.",
+    "status": "IN_PROGRESS",
+    "priority": "HIGH",
+    "category": "PLUMBING",
+    "createdAt": "2024-02-01T00:00:00.000Z",
+    "updatedAt": "2024-02-02T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` not found or belongs to another user.
 
 ---
 
@@ -1272,6 +1424,41 @@ Create a Razorpay order to purchase a service subscription.
 
 ---
 
+### POST /api/services/verify-payment
+
+Confirm a service subscription payment after Razorpay checkout. Idempotent — safe to call multiple times. Sets `startDate` and `endDate` on success.
+
+**Auth:** USER
+
+**Request Body:**
+
+```json
+{
+  "razorpayOrderId":   "order_xxx",
+  "razorpayPaymentId": "pay_xxx",
+  "razorpaySignature": "string"
+}
+```
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Payment verified",
+  "data": {
+    "id": "64sub...",
+    "paymentStatus": "SUCCESS",
+    "startDate": "2024-01-15T00:00:00.000Z",
+    "endDate": "2025-01-15T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `400` invalid signature · `404` order not found.
+
+---
+
 ## 7. Escrow
 
 ### POST /api/escrow/create-order
@@ -1312,6 +1499,41 @@ Create a Razorpay escrow order (token advance). Only one active escrow (`PAYMENT
 
 `payment.captured` webhook moves status to `HELD`.  
 **Errors:** `404` lead not found · `400` active escrow already exists.
+
+---
+
+### POST /api/escrow/verify-payment
+
+Confirm an escrow payment after Razorpay checkout. Idempotent — safe to call multiple times.
+
+**Auth:** USER
+
+**Request Body:**
+
+```json
+{
+  "razorpayOrderId":   "order_xxx",
+  "razorpayPaymentId": "pay_xxx",
+  "razorpaySignature": "string"
+}
+```
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Payment verified",
+  "data": {
+    "id": "64esc...",
+    "status": "HELD",
+    "razorpayPaymentId": "pay_xxx",
+    "heldAt": "2024-01-16T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `400` invalid signature · `404` order not found.
 
 ---
 
@@ -1384,7 +1606,7 @@ Published content blocks (paginated).
 
 | Param | Type | Description |
 |-------|------|-------------|
-| `type` | string | `BLOG` · `FAQ` · `HERO_BANNER` · `TESTIMONIAL` · `ANNOUNCEMENT` · `STATS_BAR` · `NRI_GUIDE` · `TEAM_MEMBER` |
+| `type` | string | `BLOG_POST` · `FAQ` · `BANNER` · `ANNOUNCEMENT` · `PAGE` |
 | `page` | number | Default: `1` |
 | `limit` | number | Default: `20` |
 
@@ -1491,9 +1713,9 @@ Submit a contact form (authenticated or public).
 
 ## 11. Locality Insights
 
-### GET /api/locality-insights
+### GET /api/locality-insights/insight
 
-Get locality data for a city+locality pair.
+Public point-lookup for a city + locality pair. Both params are required.
 
 **Auth:** Public
 
@@ -1514,28 +1736,46 @@ Get locality data for a city+locality pair.
     "id": "64loc...",
     "city": "Pune",
     "locality": "Baner",
-    "citySlug": "pune",
-    "localitySlug": "baner",
-    "avgPricePerSqftPaise": 850000,
-    "minPricePerSqftPaise": 700000,
-    "maxPricePerSqftPaise": 1050000,
-    "avgRentPerMonthPaise": 3000000,
-    "priceChangeLastMonthPct": 2.5,
-    "nearbyInfra": ["D-Mart", "Orchid School", "Baner Metro"],
-    "dataAsOfDate": "2024-01-01T00:00:00.000Z",
+    "avgPricePerSqft": 25000,
+    "appreciation": 8.5,
+    "connectivity": "Metro, Highway",
+    "amenities": "Schools, Hospitals, Malls",
+    "overview": "Prime residential locality...",
+    "trending": true,
     "updatedAt": "2024-01-15T00:00:00.000Z"
   }
 }
 ```
 
-All `Paise` fields are integers (₹1 = 100 paise).  
-**Errors:** `404` no data for that city+locality.
+**Errors:** `400` if either query param is missing · `404` no data for that city+locality.
+
+---
+
+### GET /api/locality-insights
+
+List all locality records (paginated). Optional city filter.
+
+**Auth:** ADMIN
+
+**Query Parameters:** `city`, `page`, `limit`
+
+**Response `200`:** Paginated list of locality records.
+
+---
+
+### GET /api/locality-insights/:id
+
+Single locality record by ID.
+
+**Auth:** ADMIN
+
+**Response `200`:** Full locality record · `404` if not found.
 
 ---
 
 ### POST /api/locality-insights
 
-Create or update (upsert) locality insight data.
+Create or update (upsert by city + locality).
 
 **Auth:** ADMIN
 
@@ -1543,19 +1783,18 @@ Create or update (upsert) locality insight data.
 
 ```json
 {
-  "city": "Pune",
-  "locality": "Baner",
-  "citySlug": "pune",
-  "localitySlug": "baner",
-  "avgPricePerSqftPaise": 850000,
-  "minPricePerSqftPaise": 700000,
-  "maxPricePerSqftPaise": 1050000,
-  "avgRentPerMonthPaise": 3000000,
-  "priceChangeLastMonthPct": 2.5,
-  "nearbyInfra": ["D-Mart", "Orchid School"],
-  "dataAsOfDate": "2024-01-01T00:00:00.000Z"
+  "city":            "Pune",
+  "locality":        "Baner",
+  "avgPricePerSqft": 25000,
+  "appreciation":    8.5,
+  "connectivity":    "Metro, Highway",
+  "amenities":       "Schools, Hospitals, Malls",
+  "overview":        "Prime residential locality...",
+  "trending":        true
 }
 ```
+
+`city` and `locality` are required. All other fields are optional.
 
 **Response `201`:** `{ "success": true, "message": "Locality insight saved", "data": { ... } }`
 
@@ -1584,6 +1823,24 @@ Handles `payment.captured` and `payment.failed` from Razorpay.
 **`payment.failed`:**
 - Escrow → status moves to `FAILED`
 - Subscription → status moves to `FAILED`
+
+**Response `200`:** `{ "status": "ok" }`
+
+---
+
+### POST /api/webhooks/wati
+
+Inbound WhatsApp reply handler. Buyer replies to site-visit feedback message; this webhook maps their keyword to a lead feedback status.
+
+**Auth:** Optional `x-wati-token` header (set `WATI_WEBHOOK_TOKEN` env var to enable)
+
+**Keyword → Status mapping:**
+
+| Keyword | Status |
+|---|---|
+| `1`, `yes`, `interested` | `INTERESTED` |
+| `2`, `no`, `not interested` | `NOT_INTERESTED` |
+| `3`, `maybe`, `still deciding` | `STILL_DECIDING` |
 
 **Response `200`:** `{ "status": "ok" }`
 
@@ -1642,6 +1899,66 @@ All leads (paginated). Filter by status and partner.
   }
 }
 ```
+
+---
+
+### GET /api/admin/leads/:id
+
+Full lead detail including property, assigned partner, and escrow transactions.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64lead...",
+    "buyerName": "Suresh Mehta",
+    "buyerPhone": "+919876543210",
+    "status": "CLOSED",
+    "isOtpVerified": true,
+    "siteVisitScheduledAt": "2024-01-20T10:00:00.000Z",
+    "visitNotes": "Buyer very interested.",
+    "visitPhotoUrls": ["https://..."],
+    "closureDocumentUrls": ["https://..."],
+    "property": { "title": "3 BHK Flat in Baner", "city": "Pune", ... },
+    "assignedPartner": { "name": "Rajdeep Kumar", "companyName": "RealtyPro Solutions" },
+    "escrowTransactions": [
+      { "id": "64esc...", "amount": 50000, "status": "HELD", "heldAt": "..." }
+    ],
+    "createdAt": "2024-01-15T10:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` lead not found.
+
+---
+
+### PATCH /api/admin/leads/:id/approve-drop
+
+Approve a partner's drop request. Moves lead status to `DROPPED`.
+
+**Auth:** ADMIN
+
+**Request Body:** _(none)_
+
+**Response `200`:** `{ "success": true, "message": "Drop approved", "data": { "id": "...", "status": "DROPPED" } }`
+
+---
+
+### PATCH /api/admin/leads/:id/reject-drop
+
+Reject a partner's drop request. Reverts lead back to `ASSIGNED`.
+
+**Auth:** ADMIN
+
+**Request Body:** _(none)_
+
+**Response `200`:** `{ "success": true, "message": "Drop rejected", "data": { "id": "...", "status": "ASSIGNED" } }`
 
 ---
 
@@ -1983,6 +2300,34 @@ All escrow transactions (paginated).
 
 ---
 
+### GET /api/admin/content
+
+List all content blocks including unpublished drafts (paginated).
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `type` | string | `BLOG_POST` · `FAQ` · `BANNER` · `ANNOUNCEMENT` · `PAGE` |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:** Paginated list of content blocks (same shape as public `/api/blog` but includes unpublished records).
+
+---
+
+### GET /api/admin/content/:id
+
+Single content block by ID (published or draft).
+
+**Auth:** ADMIN
+
+**Response `200`:** Full content block · `404` if not found.
+
+---
+
 ### POST /api/admin/content
 
 Create a CMS content block.
@@ -2032,6 +2377,60 @@ Delete a CMS content block.
 **Auth:** ADMIN
 
 **Response `204`:** _(no body)_
+
+---
+
+### GET /api/admin/tickets
+
+All support tickets (paginated).
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `OPEN` · `IN_PROGRESS` · `RESOLVED` · `VERIFIED_BY_USER` |
+| `userId` | string | Filter by user ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64tkt...",
+        "subject": "Plumbing leak in bathroom",
+        "status": "OPEN",
+        "priority": "HIGH",
+        "createdAt": "2024-02-01T00:00:00.000Z",
+        "user": { "name": "Suresh Mehta", "email": "suresh@example.com" },
+        "subscription": { "id": "64sub...", "amountPaid": 4999 }
+      }
+    ],
+    "pagination": { "total": 15, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/tickets/:id
+
+Update ticket status. Enforces transition machine: `OPEN → IN_PROGRESS → RESOLVED`.
+
+**Auth:** ADMIN
+
+**Request Body:** `{ "status": "IN_PROGRESS" | "RESOLVED" }`
+
+**Response `200`:** `{ "success": true, "message": "Ticket in progress", "data": { ... } }`
+
+**Errors:** `400` invalid transition · `404` ticket not found.
 
 ---
 
@@ -2235,7 +2634,7 @@ Change a user's role. Syncs to Clerk publicMetadata and creates audit log.
 `PENDING` · `INVOICED` · `COLLECTED` · `DISPUTED`
 
 ### ContentBlock Type
-`BLOG` · `FAQ` · `HERO_BANNER` · `TESTIMONIAL` · `ANNOUNCEMENT` · `STATS_BAR` · `NRI_GUIDE` · `TEAM_MEMBER`
+`BLOG_POST` · `FAQ` · `BANNER` · `ANNOUNCEMENT` · `PAGE`
 
 ### Notification Type (examples)
 `LEAD_NEW` · `LEAD_ASSIGNED` · `PROPERTY_APPROVED` · `PROPERTY_REJECTED` · `PROPERTY_EDITED_BY_ADMIN` · `KYC_PENDING` · `KYC_UPDATE` · `DEAL_CLOSED` · `ESCROW_REFUNDED` · `SERVICE_ACTIVATED` · `LOAN_STATUS_UPDATE` · `ANNOUNCEMENT`

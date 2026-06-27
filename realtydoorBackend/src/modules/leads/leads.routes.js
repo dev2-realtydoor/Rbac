@@ -19,6 +19,7 @@ router.patch('/partner/:id/document', authenticate, requirePartner, requireKyc,
   visitPhotoUploader.fields([{ name: 'visitPhotos', maxCount: 10 }, { name: 'closureDocs', maxCount: 5 }]),
   ctrl.uploadDocs
 );
-router.patch('/partner/:id/close', authenticate, requirePartner, requireKyc, ctrl.closeLead);
+router.patch('/partner/:id/close',        authenticate, requirePartner, requireKyc, ctrl.closeLead);
+router.patch('/partner/:id/request-drop', authenticate, requirePartner, requireKyc, ctrl.requestDrop);
 
 module.exports = router;

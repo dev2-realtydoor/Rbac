@@ -3,14 +3,18 @@ const ctrl = require('./admin.controller');
 const escrowCtrl = require('../escrow/escrow.controller');
 const cmsCtrl = require('../cms/cms.controller');
 const notifCtrl = require('../notifications/notifications.controller');
+const leadsCtrl = require('../leads/leads.controller');
 const { authenticate } = require('../../middleware/auth');
 const { requireAdmin } = require('../../middleware/requireRole');
 
 router.use(authenticate, requireAdmin);
 
 // Lead management
-router.get('/leads', ctrl.getLeads);
-router.patch('/leads/:id/assign', ctrl.assignLead);
+router.get('/leads',        ctrl.getLeads);
+router.get('/leads/:id',    ctrl.getLeadById);
+router.patch('/leads/:id/assign',        ctrl.assignLead);
+router.patch('/leads/:id/approve-drop',  leadsCtrl.approveDrop);
+router.patch('/leads/:id/reject-drop',   leadsCtrl.rejectDrop);
 
 // Property approval + admin edit
 router.get('/properties', ctrl.getPendingProperties);
@@ -37,12 +41,18 @@ router.post('/escrow/:id/refund', escrowCtrl.refundEscrow);
 router.get('/escrow', escrowCtrl.getAllEscrow);
 
 // CMS
-router.post('/content', cmsCtrl.create);
-router.patch('/content/:id', cmsCtrl.update);
+router.get('/content',        cmsCtrl.getAllForAdmin);
+router.get('/content/:id',    cmsCtrl.getByIdForAdmin);
+router.post('/content',       cmsCtrl.create);
+router.patch('/content/:id',  cmsCtrl.update);
 router.delete('/content/:id', cmsCtrl.remove);
 
 // Notifications
 router.post('/notifications/broadcast', notifCtrl.broadcast);
+
+// Ticket management
+router.get('/tickets',            ctrl.getTickets);
+router.patch('/tickets/:id',      ctrl.updateTicket);
 
 // Loan management
 router.get('/loan',               ctrl.getLoans);

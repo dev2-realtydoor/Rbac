@@ -3,9 +3,12 @@ const ApiError = require('../../utils/ApiError');
 const { createNotification } = require('../../lib/notifications');
 
 async function submitKyc(partnerId, documentUrls) {
+  if (!documentUrls || documentUrls.length === 0) throw new ApiError(400, 'At least one KYC document is required');
+
   const user = await prisma.user.findUnique({ where: { id: partnerId } });
   if (!user) throw new ApiError(404, 'User not found');
   if (user.kycStatus === 'VERIFIED') throw new ApiError(400, 'KYC already verified');
+  if (user.kycStatus === 'PENDING_REVIEW') throw new ApiError(400, 'KYC is already under review');
 
   const updated = await prisma.user.update({
     where: { id: partnerId },
@@ -64,19 +67,26 @@ async function getMyListings(partnerId, status) {
 }
 
 async function getFinanceSummary(partnerId) {
-  const leads = await prisma.lead.findMany({
-    where: { assignedPartnerId: partnerId },
-    include: { escrowTransactions: true },
-  });
-  const closed = leads.filter((l) => l.status === 'CLOSED');
-  const escrowHeld = closed
+  const [totalLeads, closedLeads] = await Promise.all([
+    prisma.lead.count({ where: { assignedPartnerId: partnerId } }),
+    prisma.lead.findMany({
+      where: { assignedPartnerId: partnerId, status: 'CLOSED' },
+      include: {
+        escrowTransactions: {
+          where: { status: 'HELD' },
+          select: { amount: true },
+        },
+      },
+    }),
+  ]);
+
+  const escrowHeld = closedLeads
     .flatMap((l) => l.escrowTransactions)
-    .filter((e) => e.status === 'HELD')
     .reduce((sum, e) => sum + e.amount, 0);
 
   return {
-    totalLeads: leads.length,
-    closedDeals: closed.length,
+    totalLeads,
+    closedDeals: closedLeads.length,
     escrowHeld,
   };
 }

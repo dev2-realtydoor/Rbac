@@ -185,6 +185,31 @@
           ]
         },
         {
+          "name": "Upload Property Videos",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "videos", "type": "file", "src": [], "description": "mp4/mov, max 50MB each, up to 5 files" },
+                { "key": "videos", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/api/properties/{{propertyId}}/videos", "host": ["{{baseUrl}}"], "path": ["api","properties","{{propertyId}}","videos"] }
+          },
+          "response": [
+            {
+              "name": "200 – Videos Uploaded",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Videos uploaded\",\"data\":{\"id\":\"664abc123def456789012345\",\"videos\":[\"https://res.cloudinary.com/realtydoor/video/upload/v1/realtydoor/properties/tour.mp4\"]}}"
+            }
+          ]
+        },
+        {
           "name": "Update Property Listing",
           "request": {
             "method": "PATCH",
@@ -393,6 +418,32 @@
           ]
         },
         {
+          "name": "Request Drop",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/leads/partner/{{leadId}}/request-drop", "host": ["{{baseUrl}}"], "path": ["api","leads","partner","{{leadId}}","request-drop"] }
+          },
+          "response": [
+            {
+              "name": "200 – Drop Requested",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Drop request submitted\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"DROP_REQUESTED\"}}"
+            },
+            {
+              "name": "400 – Already Closed",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Lead already closed or dropped\"}"
+            }
+          ]
+        },
+        {
           "name": "Close Lead",
           "request": {
             "method": "PATCH",
@@ -423,6 +474,29 @@
     {
       "name": "Users",
       "item": [
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Suresh Mehta\",\n  \"isNRI\": false\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/user/profile", "host": ["{{baseUrl}}"], "path": ["api","user","profile"] }
+          },
+          "response": [
+            {
+              "name": "200 – Profile Updated",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Profile updated\",\"data\":{\"id\":\"6a1a3213aa8de854e8acfad8\",\"name\":\"Suresh Mehta\",\"isNRI\":false}}"
+            }
+          ]
+        },
         {
           "name": "Request Phone OTP",
           "request": {
@@ -508,6 +582,24 @@
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0021" }],
               "cookie": [],
               "body": "{\"success\":true,\"data\":[{\"id\":\"665def456abc789012345678\",\"status\":\"SITE_VISIT_DONE\",\"buyerMessage\":\"I am interested in this property.\",\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\",\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"]},\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Favorites",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/favorites", "host": ["{{baseUrl}}"], "path": ["api","user","favorites"] }
+          },
+          "response": [
+            {
+              "name": "200 – Favorites",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"66fav001\",\"propertyId\":\"664abc123def456789012345\",\"createdAt\":\"2026-05-12T08:00:00.000Z\",\"property\":{\"title\":\"3 BHK Flat in Baner\",\"slug\":\"skyline-heights-3bhk-baner-1717000000000\",\"city\":\"Pune\",\"price\":8500000,\"images\":[\"https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800\"]}}]}"
             }
           ]
         },
@@ -600,6 +692,50 @@
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0025" }],
               "cookie": [],
               "body": "{\"success\":true,\"data\":[{\"id\":\"667bbb222ccc333ddd444eee\",\"serviceId\":\"668ccc333ddd444eee555fff\",\"paymentStatus\":\"SUCCESS\",\"amountPaid\":5999,\"startDate\":\"2026-05-01T00:00:00.000Z\",\"endDate\":\"2027-05-01T00:00:00.000Z\",\"tickets\":[{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap broken\",\"status\":\"RESOLVED\",\"createdAt\":\"2026-05-10T10:00:00.000Z\"}]}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get My Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/tickets", "host": ["{{baseUrl}}"], "path": ["api","user","tickets"] }
+          },
+          "response": [
+            {
+              "name": "200 – My Tickets",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":[{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap dripping\",\"status\":\"IN_PROGRESS\",\"priority\":\"NORMAL\",\"createdAt\":\"2026-05-19T11:30:00.000Z\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/user/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["api","user","tickets","{{ticketId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Ticket Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap dripping\",\"description\":\"The cold water tap in the master bathroom has been dripping for 3 days.\",\"status\":\"IN_PROGRESS\",\"priority\":\"NORMAL\",\"category\":\"PLUMBING\",\"createdAt\":\"2026-05-19T11:30:00.000Z\",\"updatedAt\":\"2026-05-20T09:00:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Ticket not found\"}"
             }
           ]
         },
@@ -917,6 +1053,68 @@
                   "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0040" }],
                   "cookie": [],
                   "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerPhone\":\"+91 90000 XXXXX\",\"status\":\"UNASSIGNED\",\"isOtpVerified\":false,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"city\":\"Pune\"},\"assignedPartner\":null,\"createdAt\":\"2026-05-19T11:30:00.000Z\"}],\"pagination\":{\"total\":24,\"page\":1,\"limit\":20,\"totalPages\":2,\"hasNext\":true,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Get Lead Detail (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","leads","{{leadId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Lead Detail",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"id\":\"665def456abc789012345678\",\"buyerName\":\"Suresh Mehta\",\"buyerPhone\":\"+919000000003\",\"status\":\"CLOSED\",\"isOtpVerified\":true,\"property\":{\"title\":\"3 BHK Flat in Baner\",\"city\":\"Pune\"},\"assignedPartner\":{\"name\":\"Rajdeep Kumar\",\"companyName\":\"RealtyPro Solutions\"},\"escrowTransactions\":[{\"id\":\"66bbb111ccc222ddd333eee4\",\"amount\":100000,\"status\":\"HELD\",\"heldAt\":\"2026-05-16T10:00:00.000Z\"}],\"createdAt\":\"2026-05-19T11:30:00.000Z\"}}"
+                },
+                {
+                  "name": "404 – Not Found",
+                  "status": "Not Found", "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Lead not found\"}"
+                }
+              ]
+            },
+            {
+              "name": "Approve Drop Request",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/approve-drop", "host": ["{{baseUrl}}"], "path": ["api","admin","leads","{{leadId}}","approve-drop"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Drop Approved",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Drop approved\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"DROPPED\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Reject Drop Request",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/leads/{{leadId}}/reject-drop", "host": ["{{baseUrl}}"], "path": ["api","admin","leads","{{leadId}}","reject-drop"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Drop Rejected",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Drop rejected\",\"data\":{\"id\":\"665def456abc789012345678\",\"status\":\"ASSIGNED\"}}"
                 }
               ]
             },
@@ -1267,6 +1465,59 @@
           "name": "CMS Content",
           "item": [
             {
+              "name": "List All Content (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/content?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","content"],
+                  "query": [
+                    { "key": "type", "value": "BLOG_POST", "description": "BLOG_POST|FAQ|BANNER|ANNOUNCEMENT|PAGE", "disabled": true },
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "20" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – All Content",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG_POST\",\"title\":\"Top 5 Neighbourhoods in Pune\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"isPublished\":true,\"publishedAt\":\"2026-05-10T00:00:00.000Z\",\"updatedAt\":\"2026-05-10T00:00:00.000Z\"},{\"id\":\"66ddd444eee555fff666aaac\",\"type\":\"FAQ\",\"title\":\"What is escrow?\",\"slug\":\"faq-what-is-escrow\",\"isPublished\":false,\"publishedAt\":null,\"updatedAt\":\"2026-05-15T00:00:00.000Z\"}],\"pagination\":{\"total\":5,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Get Content by ID (Admin)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/admin/content/{{contentId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","content","{{contentId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Content Detail",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"id\":\"66ddd444eee555fff666aaab\",\"type\":\"BLOG_POST\",\"title\":\"Top 5 Neighbourhoods in Pune\",\"slug\":\"top-5-pune-neighbourhoods-2024\",\"body\":\"<p>Full article...</p>\",\"isPublished\":true,\"publishedAt\":\"2026-05-10T00:00:00.000Z\",\"createdAt\":\"2026-05-01T00:00:00.000Z\",\"updatedAt\":\"2026-05-10T00:00:00.000Z\"}}"
+                },
+                {
+                  "name": "404 – Not Found",
+                  "status": "Not Found", "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Content block not found\"}"
+                }
+              ]
+            },
+            {
               "name": "Create Content Block",
               "request": {
                 "method": "POST",
@@ -1327,6 +1578,70 @@
                   "header": [{ "key": "X-Request-Id", "value": "a1b2c3d4-0056" }],
                   "cookie": [],
                   "body": ""
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Tickets",
+          "item": [
+            {
+              "name": "Get All Tickets",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/tickets?page=1&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api","admin","tickets"],
+                  "query": [
+                    { "key": "status", "value": "OPEN", "description": "OPEN|IN_PROGRESS|RESOLVED|VERIFIED_BY_USER", "disabled": true },
+                    { "key": "userId", "value": "", "disabled": true },
+                    { "key": "page",   "value": "1" },
+                    { "key": "limit",  "value": "20" }
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 – All Tickets",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"669ddd444eee555fff666aaa\",\"subject\":\"Bathroom tap dripping\",\"status\":\"OPEN\",\"priority\":\"NORMAL\",\"createdAt\":\"2026-05-19T11:30:00.000Z\",\"user\":{\"name\":\"Suresh Mehta\",\"email\":\"user@realtydoor.com\"},\"subscription\":{\"id\":\"667bbb222ccc333ddd444eee\",\"amountPaid\":5999}}],\"pagination\":{\"total\":8,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Ticket Status",
+              "request": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"IN_PROGRESS\"\n}",
+                  "options": { "raw": { "language": "json" } }
+                },
+                "url": { "raw": "{{baseUrl}}/api/admin/tickets/{{ticketId}}", "host": ["{{baseUrl}}"], "path": ["api","admin","tickets","{{ticketId}}"] }
+              },
+              "response": [
+                {
+                  "name": "200 – Status Updated",
+                  "status": "OK", "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Ticket in progress\",\"data\":{\"id\":\"669ddd444eee555fff666aaa\",\"status\":\"IN_PROGRESS\",\"updatedAt\":\"2026-05-20T09:00:00.000Z\"}}"
+                },
+                {
+                  "name": "400 – Invalid Transition",
+                  "status": "Bad Request", "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [{ "key": "Content-Type", "value": "application/json" }],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Invalid status transition\"}"
                 }
               ]
             }
@@ -1497,6 +1812,37 @@
       "name": "Escrow",
       "item": [
         {
+          "name": "Verify Escrow Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_Abc123XYZescrow\",\n  \"razorpay_payment_id\": \"pay_Abc123XYZ\",\n  \"razorpay_signature\": \"<hmac-sha256-signature>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/escrow/verify-payment", "host": ["{{baseUrl}}"], "path": ["api","escrow","verify-payment"] }
+          },
+          "response": [
+            {
+              "name": "200 – Payment Verified",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Payment verified\",\"data\":{\"id\":\"66bbb111ccc222ddd333eee4\",\"status\":\"HELD\",\"razorpayPaymentId\":\"pay_Abc123XYZ\"}}"
+            },
+            {
+              "name": "400 – Invalid Signature",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Invalid payment signature\"}"
+            }
+          ]
+        },
+        {
           "name": "Create Escrow Order",
           "request": {
             "method": "POST",
@@ -1539,9 +1885,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/locality-insights?city=Pune&locality=Baner",
+              "raw": "{{baseUrl}}/api/locality-insights/insight?city=Pune&locality=Baner",
               "host": ["{{baseUrl}}"],
-              "path": ["api","locality-insights"],
+              "path": ["api","locality-insights","insight"],
               "query": [
                 { "key": "city", "value": "Pune" },
                 { "key": "locality", "value": "Baner" }
@@ -1564,6 +1910,59 @@
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0071e" }],
               "cookie": [],
               "body": "{\"success\":false,\"message\":\"No locality data found\"}"
+            }
+          ]
+        },
+        {
+          "name": "List Locality Insights (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locality-insights?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","locality-insights"],
+              "query": [
+                { "key": "city",  "value": "Pune", "disabled": true },
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 – Locality List",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqft\":8500,\"trending\":false,\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}],\"pagination\":{\"total\":12,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+            }
+          ]
+        },
+        {
+          "name": "Get Locality Insight by ID (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/locality-insights/{{localityInsightId}}", "host": ["{{baseUrl}}"], "path": ["api","locality-insights","{{localityInsightId}}"] }
+          },
+          "response": [
+            {
+              "name": "200 – Locality Detail",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqft\":8500,\"appreciation\":2.3,\"connectivity\":\"Well connected via NH-48 and Baner-Balewadi road\",\"amenities\":\"D-Mart, Orchid School, Baner Metro Station, Aditya Birla Hospital\",\"overview\":\"Baner is a rapidly developing IT suburb with excellent social infrastructure.\",\"trending\":true,\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found", "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Locality insight not found\"}"
             }
           ]
         },
@@ -1637,6 +2036,37 @@
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0070" }],
               "cookie": [],
               "body": "{\"success\":true,\"data\":[{\"id\":\"668ccc333ddd444eee555fff\",\"name\":\"Annual Maintenance Plan\",\"shortDesc\":\"12 months of home maintenance coverage\",\"price\":5999,\"category\":\"MAINTENANCE\",\"features\":[\"Plumbing\",\"Electrical\",\"Painting touch-up\",\"24h support\"],\"isActive\":true,\"sortOrder\":1,\"imageUrl\":\"https://res.cloudinary.com/realtydoor/image/upload/v1/realtydoor/services/maintenance.jpg\"}]}"
+            }
+          ]
+        },
+        {
+          "name": "Verify Service Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_Abc123XYZsvc\",\n  \"razorpay_payment_id\": \"pay_Abc123SVC\",\n  \"razorpay_signature\": \"<hmac-sha256-signature>\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/services/verify-payment", "host": ["{{baseUrl}}"], "path": ["api","services","verify-payment"] }
+          },
+          "response": [
+            {
+              "name": "200 – Payment Verified",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":true,\"message\":\"Payment verified\",\"data\":{\"id\":\"667bbb222ccc333ddd444eee\",\"paymentStatus\":\"SUCCESS\",\"startDate\":\"2026-05-19T00:00:00.000Z\",\"endDate\":\"2027-05-19T00:00:00.000Z\"}}"
+            },
+            {
+              "name": "400 – Invalid Signature",
+              "status": "Bad Request", "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"Invalid payment signature\"}"
             }
           ]
         },
@@ -2065,6 +2495,57 @@
               "status": "OK", "code": 200,
               "_postman_previewlanguage": "json",
               "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-Request-Id", "value": "a1b2c3d4-0114" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            }
+          ]
+        },
+        {
+          "name": "Razorpay Webhook — transfer.settled",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",         "value": "application/json" },
+              { "key": "x-razorpay-signature", "value": "<hmac-sha256-of-body>" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"transfer.settled\",\n  \"payload\": {\n    \"transfer\": {\n      \"entity\": {\n        \"id\": \"trf_Abc123XYZ\",\n        \"source\": \"pay_Abc123XYZ\",\n        \"recipient\": \"acc_xxxxxxxxxxxxxxxx\",\n        \"amount\": 80000,\n        \"currency\": \"INR\",\n        \"status\": \"settled\",\n        \"created_at\": 1747720000\n      }\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/api/webhooks/razorpay", "host": ["{{baseUrl}}"], "path": ["api","webhooks","razorpay"] }
+          },
+          "response": [
+            {
+              "name": "200 – Transfer Settled",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "cookie": [],
+              "body": "{\"status\":\"ok\"}"
+            }
+          ]
+        },
+        {
+          "name": "WATI Webhook — buyer feedback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"waId\": \"919000000003\",\n  \"text\": {\n    \"body\": \"Yes, I am satisfied with the service.\"\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{baseUrl}}/webhooks/wati", "host": ["{{baseUrl}}"], "path": ["webhooks","wati"] }
+          },
+          "response": [
+            {
+              "name": "200 – Feedback Received",
+              "status": "OK", "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
               "cookie": [],
               "body": "{\"status\":\"ok\"}"
             }

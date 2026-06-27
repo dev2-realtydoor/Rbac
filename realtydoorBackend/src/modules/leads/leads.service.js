@@ -2,26 +2,33 @@ const prisma = require('../../lib/prisma');
 const ApiError = require('../../utils/ApiError');
 const { formatPhone } = require('../../lib/phoneUtils');
 const { generate, expiresAt, isExpired, isLocked, lockUntil, maxAttemptsReached } = require('../../lib/otp');
-const { sendSiteVisitOtp, sendLeadAssignedNotice } = require('../../lib/wati');
+const { sendSiteVisitOtp } = require('../../lib/wati');
 const { createNotification } = require('../../lib/notifications');
 const { sendLeadAssigned } = require('../../lib/email');
+const { createAuditLog } = require('../../lib/auditLog');
 
-async function submitLead(data) {
+async function submitLead(data, buyerId) {
+  const property = await prisma.property.findUnique({ where: { id: data.propertyId }, select: { id: true, publishStatus: true } });
+  if (!property) throw new ApiError(404, 'Property not found');
+  if (property.publishStatus !== 'APPROVED') throw new ApiError(400, 'This property is not currently available for enquiry');
+
+  const existing = await prisma.lead.findFirst({
+    where: { propertyId: data.propertyId, buyerPhone: data.buyerPhone, status: { not: 'DROPPED' } },
+  });
+  if (existing) throw new ApiError(409, 'You have already submitted an enquiry for this property');
+
   const lead = await prisma.lead.create({
-    data: { ...data, status: 'UNASSIGNED' },
+    data: { ...data, status: 'UNASSIGNED', ...(buyerId && { buyerId }) },
   });
 
-  // Notify admin of new unassigned lead
   const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
-  for (const admin of admins) {
-    await createNotification({
-      userId: admin.id,
-      title: 'New Unassigned Lead',
-      message: `${data.buyerName} enquired about a property.`,
-      type: 'LEAD_NEW',
-      linkUrl: `/admin/leads/${lead.id}`,
-    });
-  }
+  await Promise.all(admins.map((admin) => createNotification({
+    userId: admin.id,
+    title: 'New Unassigned Lead',
+    message: `${data.buyerName} enquired about a property.`,
+    type: 'LEAD_NEW',
+    linkUrl: `/admin/leads/${lead.id}`,
+  })));
 
   return lead;
 }
@@ -74,8 +81,13 @@ async function scheduleVisit(leadId, partnerId, scheduledAt) {
     },
   });
 
-  await sendSiteVisitOtp(lead.buyerPhone, otp);
-  return { message: 'OTP sent to buyer via WhatsApp. Enter it at the site.' };
+  try {
+    await sendSiteVisitOtp(lead.buyerPhone, otp);
+  } catch (err) {
+    const logger = require('../../lib/logger');
+    logger.error('[scheduleVisit] WATI OTP send failed', { leadId, error: err.message });
+  }
+  return { message: 'Visit scheduled. OTP sent to buyer via WhatsApp.' };
 }
 
 async function verifyOtp(leadId, partnerId, inputOtp) {
@@ -93,7 +105,7 @@ async function verifyOtp(leadId, partnerId, inputOtp) {
       data: { otpAttempts: newAttempts, otpLockedUntil: locked },
     });
     if (locked) throw new ApiError(429, 'Maximum OTP attempts reached. Lead is locked. Contact Admin.');
-    throw new ApiError(400, `Incorrect OTP. ${3 - newAttempts} attempt(s) remaining.`);
+    throw new ApiError(400, `Incorrect OTP. ${MAX_ATTEMPTS - newAttempts} attempt(s) remaining.`);
   }
 
   const updated = await prisma.lead.update({
@@ -141,17 +153,107 @@ async function closeLead(leadId, partnerId) {
   await prisma.lead.update({ where: { id: leadId }, data: { status: 'CLOSED' } });
 
   const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
-  for (const admin of admins) {
-    await createNotification({
-      userId: admin.id,
-      title: 'Deal Closed — Escrow Review Needed',
-      message: `Lead #${leadId} has been marked as closed. Review escrow release.`,
-      type: 'DEAL_CLOSED',
-      linkUrl: `/admin/leads/${leadId}`,
-    });
-  }
+  await Promise.all(admins.map((admin) => createNotification({
+    userId: admin.id,
+    title: 'Deal Closed — Escrow Review Needed',
+    message: `Lead #${leadId} has been marked as closed. Review escrow release.`,
+    type: 'DEAL_CLOSED',
+    linkUrl: `/admin/leads/${leadId}`,
+  })));
 
   return { message: 'Lead marked as closed. Admin will review escrow release.' };
 }
 
-module.exports = { submitLead, getPartnerLeads, getPartnerLeadById, scheduleVisit, verifyOtp, uploadDocs, closeLead };
+// ─── DROP FLOW ───────────────────────────────────────────────────────────────
+
+async function requestDrop(leadId, partnerId, reason) {
+  const lead = await prisma.lead.findFirst({ where: { id: leadId, assignedPartnerId: partnerId } });
+  if (!lead) throw new ApiError(404, 'Lead not found');
+  if (['CLOSED', 'DROPPED'].includes(lead.status)) {
+    throw new ApiError(400, `Cannot request a drop on a ${lead.status.toLowerCase()} lead`);
+  }
+  if (lead.dropRequestedByPartner) throw new ApiError(400, 'A drop request is already pending for this lead');
+
+  await prisma.lead.update({
+    where: { id: leadId },
+    data: { dropRequestedByPartner: true, dropRequestNote: reason, dropRequestedAt: new Date() },
+  });
+
+  const admins = await prisma.user.findMany({ where: { role: 'ADMIN' }, select: { id: true } });
+  await Promise.all(admins.map((admin) => createNotification({
+    userId: admin.id,
+    title: 'Lead Drop Requested',
+    message: `Partner has requested to drop Lead #${leadId}. Reason: ${reason}`,
+    type: 'LEAD_DROP_REQUESTED',
+    linkUrl: `/admin/leads/${leadId}`,
+  })));
+
+  return { message: 'Drop request submitted. Admin will review.' };
+}
+
+async function adminApproveDrop(leadId, adminId, ip) {
+  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  if (!lead) throw new ApiError(404, 'Lead not found');
+  if (!lead.dropRequestedByPartner) throw new ApiError(400, 'No pending drop request for this lead');
+  if (lead.status === 'DROPPED') throw new ApiError(400, 'Lead is already dropped');
+
+  const updated = await prisma.lead.update({
+    where: { id: leadId },
+    data: {
+      status: 'DROPPED',
+      droppedAt: new Date(),
+      droppedByAdminId: adminId,
+      droppedReason: lead.dropRequestNote,
+      dropRequestedByPartner: false,
+    },
+  });
+
+  if (lead.assignedPartnerId) {
+    await createNotification({
+      userId: lead.assignedPartnerId,
+      title: 'Drop Request Approved',
+      message: `Your drop request for Lead #${leadId} has been approved.`,
+      type: 'LEAD_DROPPED',
+      linkUrl: `/partner/leads/${leadId}`,
+    });
+  }
+
+  await createAuditLog({
+    adminId, action: 'LEAD_DROPPED', targetType: 'Lead', targetId: leadId,
+    before: { status: lead.status },
+    after: { status: 'DROPPED', droppedReason: lead.dropRequestNote },
+    ipAddress: ip,
+  });
+
+  return updated;
+}
+
+async function adminRejectDrop(leadId, adminId, ip) {
+  const lead = await prisma.lead.findUnique({ where: { id: leadId } });
+  if (!lead) throw new ApiError(404, 'Lead not found');
+  if (!lead.dropRequestedByPartner) throw new ApiError(400, 'No pending drop request for this lead');
+
+  await prisma.lead.update({
+    where: { id: leadId },
+    data: { dropRequestedByPartner: false, dropRequestNote: null, dropRequestedAt: null },
+  });
+
+  if (lead.assignedPartnerId) {
+    await createNotification({
+      userId: lead.assignedPartnerId,
+      title: 'Drop Request Rejected',
+      message: `Your drop request for Lead #${leadId} has been rejected. Please continue working the lead.`,
+      type: 'LEAD_DROP_REJECTED',
+      linkUrl: `/partner/leads/${leadId}`,
+    });
+  }
+
+  await createAuditLog({
+    adminId, action: 'LEAD_DROP_REJECTED', targetType: 'Lead', targetId: leadId,
+    after: { dropRequestRejected: true }, ipAddress: ip,
+  });
+
+  return { message: 'Drop request rejected. Partner notified.' };
+}
+
+module.exports = { submitLead, getPartnerLeads, getPartnerLeadById, scheduleVisit, verifyOtp, uploadDocs, closeLead, requestDrop, adminApproveDrop, adminRejectDrop };

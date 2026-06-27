@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const ctrl    = require('./webhooks.controller');
 const { clerkWebhook } = require('./clerk.handler');
+const { watiWebhook }  = require('./wati.handler');
 
 // Both routes use express.raw() — safe because this router is mounted in app.js
 // BEFORE express.json(), so the stream has not been consumed yet.
@@ -20,5 +21,6 @@ const rawBody = (req, res, next) => {
 
 router.post('/razorpay', rawBody, ctrl.razorpay);
 router.post('/clerk',    rawBody, clerkWebhook);
+router.post('/wati',     rawBody, watiWebhook);
 
 module.exports = router;
