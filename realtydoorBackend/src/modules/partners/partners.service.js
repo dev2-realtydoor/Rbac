@@ -91,4 +91,87 @@ async function getFinanceSummary(partnerId) {
   };
 }
 
-module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary };
+async function getPartnerAnalytics(partnerId) {
+  const now              = new Date();
+  const startOfMonth     = new Date(now.getFullYear(), now.getMonth(), 1);
+  const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const endOfLastMonth   = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+  const [allLeads, allListings, thisMonthCount, lastMonthCount] = await Promise.all([
+    prisma.lead.findMany({
+      where: { assignedPartnerId: partnerId },
+      select: {
+        status: true,
+        isOtpVerified: true,
+        dropRequestedByPartner: true,
+        buyerFeedbackStatus: true,
+        escrowTransactions: { select: { status: true, amount: true } },
+      },
+    }),
+    prisma.property.findMany({
+      where: { partnerId },
+      select: { publishStatus: true },
+    }),
+    prisma.lead.count({
+      where: { assignedPartnerId: partnerId, createdAt: { gte: startOfMonth } },
+    }),
+    prisma.lead.count({
+      where: { assignedPartnerId: partnerId, createdAt: { gte: startOfLastMonth, lte: endOfLastMonth } },
+    }),
+  ]);
+
+  // ── Lead aggregations ──────────────────────────────────────────────────────
+  const leadByStatus     = {};
+  const feedbackByStatus = { PENDING: 0, VERIFIED_CLOSED: 0, VERIFIED_DROPPED: 0, STILL_DECIDING: 0, NO_RESPONSE: 0 };
+  let pendingDropRequests = 0;
+  let otpVerified  = 0;
+  let heldAmount   = 0;
+  let releasedAmount = 0;
+
+  for (const lead of allLeads) {
+    leadByStatus[lead.status] = (leadByStatus[lead.status] || 0) + 1;
+    if (lead.buyerFeedbackStatus) {
+      feedbackByStatus[lead.buyerFeedbackStatus] = (feedbackByStatus[lead.buyerFeedbackStatus] || 0) + 1;
+    }
+    if (lead.dropRequestedByPartner) pendingDropRequests++;
+    if (lead.isOtpVerified)          otpVerified++;
+    for (const tx of lead.escrowTransactions || []) {
+      if (tx.status === 'HELD')     heldAmount     += tx.amount;
+      if (tx.status === 'RELEASED') releasedAmount += tx.amount;
+    }
+  }
+
+  // ── Listing aggregations ───────────────────────────────────────────────────
+  const listingByStatus = {};
+  for (const l of allListings) {
+    listingByStatus[l.publishStatus] = (listingByStatus[l.publishStatus] || 0) + 1;
+  }
+
+  const total  = allLeads.length;
+  const closed = leadByStatus.CLOSED  || 0;
+  const dropped = leadByStatus.DROPPED || 0;
+
+  return {
+    leads: {
+      total,
+      byStatus: leadByStatus,
+      pendingDropRequests,
+      otpVerified,
+      thisMonth:      thisMonthCount,
+      lastMonth:      lastMonthCount,
+      conversionRate: total ? +(closed  / total).toFixed(2) : 0,
+      dropRate:       total ? +(dropped / total).toFixed(2) : 0,
+    },
+    listings: {
+      total: allListings.length,
+      byStatus: listingByStatus,
+    },
+    buyerFeedback: feedbackByStatus,
+    escrow: {
+      heldAmount,
+      releasedAmount,
+    },
+  };
+}
+
+module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary, getPartnerAnalytics };

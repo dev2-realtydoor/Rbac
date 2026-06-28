@@ -40,6 +40,11 @@ const updateProfileSchema = z.object({
   isNRI: z.boolean().optional(),
 }).refine((d) => Object.keys(d).length > 0, { message: 'At least one field must be provided' });
 
+const requestVideoTourSchema = z.object({
+  propertyId: objectId,
+  userNote:   z.string().max(500).optional(),
+});
+
 module.exports = {
   requestPhoneOtpSchema,
   verifyPhoneOtpSchema,
@@ -48,4 +53,5 @@ module.exports = {
   raiseTicketSchema,
   createLoanSchema,
   updateProfileSchema,
+  requestVideoTourSchema,
 };

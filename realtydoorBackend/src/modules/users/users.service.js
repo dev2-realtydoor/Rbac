@@ -111,9 +111,9 @@ async function getFavorites(userId) {
         },
       },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { savedAt: 'desc' },
   });
-  return favs.map((f) => ({ ...f.property, favoritedAt: f.createdAt }));
+  return favs.map((f) => ({ ...f.property, favoritedAt: f.savedAt }));
 }
 
 async function updateProfile(userId, data) {
@@ -147,7 +147,7 @@ async function getSubscriptions(userId) {
   return prisma.userSubscription.findMany({
     where: { userId },
     include: { tickets: { orderBy: { createdAt: 'desc' } } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { startDate: 'desc' },
   });
 }
 
@@ -210,4 +210,37 @@ async function getLoanApplicationById(userId, loanId) {
   return loan;
 }
 
-module.exports = { requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile, getDocuments, uploadDocument, getSubscriptions, raiseTicket, getMyTickets, getMyTicketById, verifyTicket, createLoanApplication, getMyLoanApplications, getLoanApplicationById };
+async function requestVideoTour(userId, propertyId, userNote) {
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, publishStatus: 'APPROVED' },
+    select: { id: true },
+  });
+  if (!property) throw new ApiError(404, 'Property not found');
+
+  const existing = await prisma.videoTourRequest.findFirst({
+    where: { userId, propertyId, status: { in: ['PENDING', 'ASSIGNED'] } },
+  });
+  if (existing) throw new ApiError(409, 'You already have a pending video tour request for this property');
+
+  return prisma.videoTourRequest.create({
+    data: { userId, propertyId, userNote },
+  });
+}
+
+async function getMyVideoTours(userId) {
+  return prisma.videoTourRequest.findMany({
+    where: { userId },
+    include: {
+      property: { select: { title: true, slug: true, city: true, images: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+module.exports = {
+  requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile,
+  getDocuments, uploadDocument, getSubscriptions,
+  raiseTicket, getMyTickets, getMyTicketById, verifyTicket,
+  createLoanApplication, getMyLoanApplications, getLoanApplicationById,
+  requestVideoTour, getMyVideoTours,
+};

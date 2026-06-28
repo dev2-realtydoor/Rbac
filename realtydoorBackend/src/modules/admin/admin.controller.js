@@ -1,4 +1,4 @@
-const { success } = require('../../utils/ApiResponse');
+const { success, created } = require('../../utils/ApiResponse');
 const { parsePagination, paginate } = require('../../utils/pagination');
 const service = require('./admin.service');
 const {
@@ -9,6 +9,12 @@ const {
   changeUserRoleSchema,
   editPropertySchema,
   updateTicketSchema,
+  createServiceSchema,
+  updateServiceSchema,
+  createTeamMemberSchema,
+  updateTeamMemberSchema,
+  verifyDocumentSchema,
+  updateVideoTourSchema,
 } = require('./admin.validator');
 
 async function getLeadById(req, res, next) {
@@ -60,7 +66,7 @@ async function rejectProperty(req, res, next) {
 async function getPendingKyc(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
-    const { data, total } = await service.getPendingKyc(skip, limit);
+    const { data, total } = await service.getPendingKyc(skip, limit, req.query.status);
     success(res, paginate(data, total, page, limit));
   } catch (err) { next(err); }
 }
@@ -148,9 +154,144 @@ async function getTickets(req, res, next) {
 
 async function updateTicket(req, res, next) {
   try {
-    const { status } = updateTicketSchema.parse(req.body);
-    const ticket = await service.updateTicketStatus(req.params.id, status);
-    success(res, ticket, `Ticket ${status.toLowerCase().replace('_', ' ')}`);
+    const { status, vendorName, vendorPhone } = updateTicketSchema.parse(req.body);
+    const ticket = await service.updateTicketStatus(req.params.id, status, vendorName, vendorPhone);
+    success(res, ticket, 'Ticket updated');
+  } catch (err) { next(err); }
+}
+
+async function getPropertyById(req, res, next) {
+  try {
+    const property = await service.getPropertyByIdAdmin(req.params.id);
+    success(res, property);
+  } catch (err) { next(err); }
+}
+
+async function getKycById(req, res, next) {
+  try {
+    const user = await service.getKycByUserId(req.params.userId);
+    success(res, user);
+  } catch (err) { next(err); }
+}
+
+async function getUserById(req, res, next) {
+  try {
+    const user = await service.getUserByIdAdmin(req.params.id);
+    success(res, user);
+  } catch (err) { next(err); }
+}
+
+async function listDocuments(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.adminListDocuments(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function verifyDocument(req, res, next) {
+  try {
+    const { action, note } = verifyDocumentSchema.parse(req.body);
+    const doc = await service.adminVerifyDocument(req.params.id, action, note, req.user.id);
+    success(res, doc, `Document ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
+  } catch (err) { next(err); }
+}
+
+async function listContactMessages(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.listContactMessages(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function markContactRead(req, res, next) {
+  try {
+    const msg = await service.markContactRead(req.params.id);
+    success(res, msg, 'Marked as read');
+  } catch (err) { next(err); }
+}
+
+async function listTeam(req, res, next) {
+  try {
+    const members = await service.adminListTeam();
+    success(res, members);
+  } catch (err) { next(err); }
+}
+
+async function createTeamMember(req, res, next) {
+  try {
+    const data = createTeamMemberSchema.parse(req.body);
+    const member = await service.adminCreateTeamMember(data);
+    created(res, member, 'Team member added');
+  } catch (err) { next(err); }
+}
+
+async function updateTeamMember(req, res, next) {
+  try {
+    const data = updateTeamMemberSchema.parse(req.body);
+    const member = await service.adminUpdateTeamMember(req.params.id, data);
+    success(res, member, 'Team member updated');
+  } catch (err) { next(err); }
+}
+
+async function deleteTeamMember(req, res, next) {
+  try {
+    await service.adminDeleteTeamMember(req.params.id);
+    success(res, null, 'Team member removed');
+  } catch (err) { next(err); }
+}
+
+async function getPartnerById(req, res, next) {
+  try {
+    const partner = await service.getPartnerById(req.params.id);
+    success(res, partner);
+  } catch (err) { next(err); }
+}
+
+async function listServices(req, res, next) {
+  try {
+    const services = await service.adminListServices();
+    success(res, services);
+  } catch (err) { next(err); }
+}
+
+async function createService(req, res, next) {
+  try {
+    const data = createServiceSchema.parse(req.body);
+    const svc = await service.adminCreateService(data);
+    created(res, svc, 'Service created');
+  } catch (err) { next(err); }
+}
+
+async function updateService(req, res, next) {
+  try {
+    const data = updateServiceSchema.parse(req.body);
+    const svc = await service.adminUpdateService(req.params.id, data);
+    success(res, svc, 'Service updated');
+  } catch (err) { next(err); }
+}
+
+async function deleteService(req, res, next) {
+  try {
+    await service.adminDeleteService(req.params.id);
+    success(res, null, 'Service deactivated');
+  } catch (err) { next(err); }
+}
+
+async function listVideoTours(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.listVideoTours(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function updateVideoTour(req, res, next) {
+  try {
+    const data = updateVideoTourSchema.parse(req.body);
+    const tour = await service.updateVideoTour(req.params.id, data);
+    success(res, tour, 'Video tour updated');
   } catch (err) { next(err); }
 }
 
@@ -161,5 +302,13 @@ module.exports = {
   getRevenue, getAuditLogs, getPartnerMetrics,
   getTickets, updateTicket,
   getLoans, updateLoanStatus,
-  getUsers, changeUserRole,
+  getUsers, changeUserRole, getUserById,
+  getPartnerById,
+  getPropertyById,
+  getKycById,
+  listDocuments, verifyDocument,
+  listContactMessages, markContactRead,
+  listTeam, createTeamMember, updateTeamMember, deleteTeamMember,
+  listServices, createService, updateService, deleteService,
+  listVideoTours, updateVideoTour,
 };

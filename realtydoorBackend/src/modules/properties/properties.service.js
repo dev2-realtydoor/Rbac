@@ -41,7 +41,18 @@ async function searchProperties(query, skip, limit, page) {
   if (query.propertyStatus) where.propertyStatus = query.propertyStatus;
   if (query.isVerified !== undefined) where.isVerified = query.isVerified;
   if (query.amenities) {
-    where.amenities = { hasEvery: query.amenities.split(',').map((a) => a.trim()) };
+    // D.2: search both amenities[] AND societyFeatures[] — property must have
+    // each selected amenity in at least one of the two arrays
+    const selected = query.amenities.split(',').map((a) => a.trim()).filter(Boolean);
+    if (!where.AND) where.AND = [];
+    selected.forEach((amenity) => {
+      where.AND.push({
+        OR: [
+          { amenities:       { has: amenity } },
+          { societyFeatures: { has: amenity } },
+        ],
+      });
+    });
   }
 
   const orderBy = SORT_MAP[query.sort] || { createdAt: 'desc' };
@@ -136,4 +147,38 @@ async function addVideos(id, partnerId, urls) {
   });
 }
 
-module.exports = { searchProperties, getPropertyBySlug, createProperty, updateProperty, getFeaturedProperties, addImages, addVideos };
+async function getPropertyEditLogs(propertyId, partnerId) {
+  const property = await prisma.property.findFirst({ where: { id: propertyId, partnerId } });
+  if (!property) throw new ApiError(404, 'Property not found');
+  return prisma.propertyEditLog.findMany({
+    where: { propertyId },
+    orderBy: { editedAt: 'desc' },
+  });
+}
+
+async function getConstructionUpdates(propertyId) {
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, publishStatus: 'APPROVED' },
+    select: { id: true },
+  });
+  if (!property) throw new ApiError(404, 'Property not found');
+  return prisma.constructionUpdate.findMany({
+    where: { propertyId },
+    orderBy: { postedAt: 'desc' },
+  });
+}
+
+async function addConstructionUpdate(propertyId, partnerId, data) {
+  const property = await prisma.property.findFirst({ where: { id: propertyId, partnerId } });
+  if (!property) throw new ApiError(404, 'Property not found');
+  if (property.propertyStatus !== 'UNDER_CONSTRUCTION') {
+    throw new ApiError(400, 'Construction updates are only for under-construction properties');
+  }
+  return prisma.constructionUpdate.create({ data: { ...data, propertyId } });
+}
+
+module.exports = {
+  searchProperties, getPropertyBySlug, createProperty, updateProperty, getFeaturedProperties,
+  addImages, addVideos, getPropertyEditLogs,
+  getConstructionUpdates, addConstructionUpdate,
+};

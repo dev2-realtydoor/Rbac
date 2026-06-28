@@ -55,4 +55,11 @@ const searchSchema = paginationSchema.extend({
   sort: z.enum(['price_asc', 'price_desc', 'newest', 'area_asc']).optional(),
 });
 
-module.exports = { createPropertySchema, searchSchema };
+const constructionUpdateSchema = z.object({
+  milestoneTitle: z.string().min(3).max(200),
+  description:    z.string().max(2000).optional(),
+  mediaUrls:      z.array(z.string().url()).max(10).optional(),
+  completionPct:  z.number().int().min(0).max(100).optional(),
+});
+
+module.exports = { createPropertySchema, searchSchema, constructionUpdateSchema };

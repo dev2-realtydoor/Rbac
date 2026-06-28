@@ -17,6 +17,22 @@ async function submitLead(data, buyerId) {
   });
   if (existing) throw new ApiError(409, 'You have already submitted an enquiry for this property');
 
+  // Rate limit: 30-min cooldown between any submissions from the same phone
+  const cooloffCutoff = new Date(Date.now() - 30 * 60 * 1000);
+  const recentLead = await prisma.lead.findFirst({
+    where: { buyerPhone: data.buyerPhone, createdAt: { gte: cooloffCutoff } },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (recentLead) throw new ApiError(429, 'Please wait 30 minutes before submitting another inquiry');
+
+  // Rate limit: max 5 inquiries per calendar day per phone
+  const dayStart = new Date();
+  dayStart.setHours(0, 0, 0, 0);
+  const todayCount = await prisma.lead.count({
+    where: { buyerPhone: data.buyerPhone, createdAt: { gte: dayStart } },
+  });
+  if (todayCount >= 5) throw new ApiError(429, 'Maximum 5 inquiries allowed per day');
+
   const lead = await prisma.lead.create({
     data: { ...data, status: 'UNASSIGNED', ...(buyerId && { buyerId }) },
   });

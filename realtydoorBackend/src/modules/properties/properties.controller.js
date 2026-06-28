@@ -61,4 +61,30 @@ async function uploadVideos(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { search, getBySlug, getFeatured, create, update, uploadImages, uploadVideos };
+async function getEditLogs(req, res, next) {
+  try {
+    const logs = await service.getPropertyEditLogs(req.params.id, req.user.id);
+    success(res, logs);
+  } catch (err) { next(err); }
+}
+
+async function getConstructionUpdates(req, res, next) {
+  try {
+    const updates = await service.getConstructionUpdates(req.params.id);
+    success(res, updates);
+  } catch (err) { next(err); }
+}
+
+async function addConstructionUpdate(req, res, next) {
+  try {
+    const { constructionUpdateSchema } = require('./properties.validator');
+    const data = constructionUpdateSchema.parse(req.body);
+    const update = await service.addConstructionUpdate(req.params.id, req.user.id, data);
+    res.status(201).json({ success: true, data: update });
+  } catch (err) { next(err); }
+}
+
+module.exports = {
+  search, getBySlug, getFeatured, create, update, uploadImages, uploadVideos, getEditLogs,
+  getConstructionUpdates, addConstructionUpdate,
+};

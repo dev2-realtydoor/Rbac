@@ -10,7 +10,12 @@ router.get('/', ctrl.search);
 router.get('/featured', ctrl.getFeatured);
 router.get('/:slug', ctrl.getBySlug);
 
+// Public — construction timeline
+router.get('/:id/construction-updates', ctrl.getConstructionUpdates);
+
 // Partner (KYC required)
+router.get('/:id/edit-logs', authenticate, requirePartner, requireKyc, ctrl.getEditLogs);
+router.post('/:id/construction-updates', authenticate, requirePartner, requireKyc, ctrl.addConstructionUpdate);
 router.post('/', authenticate, requirePartner, requireKyc, ctrl.create);
 router.patch('/:id', authenticate, requirePartner, requireKyc, ctrl.update);
 router.post('/:id/images', authenticate, requirePartner, propertyImageUploader.array('images', 10), ctrl.uploadImages);

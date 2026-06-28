@@ -20,6 +20,8 @@ router.get('/listings',    requireKyc, ctrl.getMyListings);
 router.get('/listings/:id', requireKyc, ctrl.getListing);
 
 // Finance/escrow summary (KYC required)
-router.get('/finance', requireKyc, ctrl.getFinanceSummary);
+router.get('/finance',    requireKyc, ctrl.getFinanceSummary);
+// Analytics dashboard (KYC required)
+router.get('/analytics',  requireKyc, ctrl.getAnalytics);
 
 module.exports = router;

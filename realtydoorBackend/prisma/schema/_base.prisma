@@ -87,10 +87,11 @@ enum EscrowStatus {
 }
 
 enum BuyerFeedbackStatus {
-  INTERESTED
-  NOT_INTERESTED
-  STILL_DECIDING
-  NO_RESPONSE
+  PENDING          // WhatsApp sent, awaiting reply
+  VERIFIED_CLOSED  // Buyer confirmed deal is done
+  VERIFIED_DROPPED // Buyer confirmed they are not proceeding
+  STILL_DECIDING   // Buyer replied "still deciding"
+  NO_RESPONSE      // 48h passed, no WhatsApp reply — Admin flagged
 }
 
 enum PaymentStatus {

@@ -109,6 +109,41 @@ async function razorpay(req, res) {
       }
     }
 
+    if (event === 'refund.created') {
+      const { payment_id: paymentId, id: refundId, amount } = payload.refund.entity;
+      const amountRupees = `₹${(amount / 100).toLocaleString('en-IN')}`;
+
+      const escrow = await prisma.escrowTransaction.findFirst({ where: { razorpayPaymentId: paymentId } });
+      if (escrow && escrow.status !== 'REFUNDED') {
+        await prisma.escrowTransaction.update({
+          where: { id: escrow.id },
+          data: { status: 'REFUNDED', razorpayRefundId: refundId, refundedAt: new Date() },
+        });
+        await createNotification({
+          userId: escrow.buyerId,
+          title: 'Token Advance Refunded',
+          message: `Your token advance of ${amountRupees} has been refunded.`,
+          type: 'PAYMENT_REFUNDED',
+          linkUrl: '/dashboard/leads',
+        });
+      }
+
+      const subscription = await prisma.userSubscription.findFirst({ where: { razorpayPaymentId: paymentId } });
+      if (subscription && subscription.paymentStatus !== 'REFUNDED') {
+        await prisma.userSubscription.update({
+          where: { id: subscription.id },
+          data: { paymentStatus: 'REFUNDED' },
+        });
+        await createNotification({
+          userId: subscription.userId,
+          title: 'Service Payment Refunded',
+          message: `Your service subscription payment of ${amountRupees} has been refunded.`,
+          type: 'PAYMENT_REFUNDED',
+          linkUrl: '/dashboard/services',
+        });
+      }
+    }
+
     if (event === 'transfer.settled') {
       const { id: transferId } = payload.transfer.entity;
       const escrow = await prisma.escrowTransaction.findFirst({ where: { razorpayTransferId: transferId } });

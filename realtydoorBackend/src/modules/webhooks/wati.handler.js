@@ -2,12 +2,12 @@ const prisma = require('../../lib/prisma');
 const logger = require('../../lib/logger');
 
 const KEYWORD_MAP = {
-  '1': 'INTERESTED',
-  'yes': 'INTERESTED',
-  'interested': 'INTERESTED',
-  '2': 'NOT_INTERESTED',
-  'no': 'NOT_INTERESTED',
-  'not interested': 'NOT_INTERESTED',
+  '1': 'VERIFIED_CLOSED',
+  'yes': 'VERIFIED_CLOSED',
+  'interested': 'VERIFIED_CLOSED',
+  '2': 'VERIFIED_DROPPED',
+  'no': 'VERIFIED_DROPPED',
+  'not interested': 'VERIFIED_DROPPED',
   '3': 'STILL_DECIDING',
   'maybe': 'STILL_DECIDING',
   'still deciding': 'STILL_DECIDING',

@@ -176,15 +176,23 @@ async function rejectProperty(propertyId, note, adminId, ip) {
 
 // ─── KYC MANAGEMENT ──────────────────────────────────────────────────────────
 
-async function getPendingKyc(skip, limit) {
+async function getPendingKyc(skip, limit, statusFilter) {
+  // Defaults to PENDING_REVIEW so the admin queue still works unchanged;
+  // pass ?status=VERIFIED|REJECTED|NOT_SUBMITTED to see other buckets.
+  const kycStatus = statusFilter || 'PENDING_REVIEW';
+  const where = { role: 'PARTNER', kycStatus };
+
   const [data, total] = await Promise.all([
     prisma.user.findMany({
-      where: { role: 'PARTNER', kycStatus: 'PENDING_REVIEW' },
-      skip, take: limit,
-      select: { id: true, name: true, email: true, companyName: true, partnerSubType: true, kycDocumentUrls: true, createdAt: true },
+      where, skip, take: limit,
+      select: {
+        id: true, name: true, email: true, companyName: true, partnerSubType: true,
+        kycDocumentUrls: true, kycStatus: true, kycRejectionNote: true, kycVerifiedAt: true,
+        createdAt: true,
+      },
       orderBy: { createdAt: 'asc' },
     }),
-    prisma.user.count({ where: { role: 'PARTNER', kycStatus: 'PENDING_REVIEW' } }),
+    prisma.user.count({ where }),
   ]);
   return { data, total };
 }
@@ -431,19 +439,24 @@ const TICKET_TRANSITIONS = {
   VERIFIED_BY_USER: [],
 };
 
-async function updateTicketStatus(ticketId, status) {
+async function updateTicketStatus(ticketId, status, vendorName, vendorPhone) {
   const ticket = await prisma.serviceTicket.findUnique({ where: { id: ticketId } });
   if (!ticket) throw new ApiError(404, 'Ticket not found');
 
-  const allowed = TICKET_TRANSITIONS[ticket.status] ?? [];
-  if (!allowed.includes(status)) {
-    throw new ApiError(400, `Cannot transition ticket from ${ticket.status} to ${status}`);
+  const data = {};
+
+  if (status !== undefined) {
+    const allowed = TICKET_TRANSITIONS[ticket.status] ?? [];
+    if (!allowed.includes(status)) {
+      throw new ApiError(400, `Cannot transition ticket from ${ticket.status} to ${status}`);
+    }
+    data.status = status;
   }
 
-  return prisma.serviceTicket.update({
-    where: { id: ticketId },
-    data:  { status },
-  });
+  if (vendorName  !== undefined) data.vendorName  = vendorName;
+  if (vendorPhone !== undefined) data.vendorPhone = vendorPhone;
+
+  return prisma.serviceTicket.update({ where: { id: ticketId }, data });
 }
 
 // ─── AUDIT LOGS ──────────────────────────────────────────────────────────────
@@ -465,6 +478,77 @@ async function getAuditLogs(filters, skip, limit) {
     prisma.auditLog.count({ where }),
   ]);
   return { data, total };
+}
+
+// ─── PARTNER DRILL-DOWN ───────────────────────────────────────────────────────
+
+async function getPartnerById(partnerId) {
+  const partner = await prisma.user.findFirst({
+    where: { id: partnerId, role: 'PARTNER' },
+    select: {
+      id: true, name: true, email: true, phone: true, companyName: true,
+      partnerSubType: true, bio: true, profileImageUrl: true, websiteUrl: true,
+      kycStatus: true, kycRejectionNote: true, kycVerifiedAt: true,
+      isPremiumPartner: true, premiumValidUntil: true,
+      createdAt: true,
+      assignedLeads: {
+        select: {
+          id: true, status: true, buyerName: true, createdAt: true,
+          property: { select: { title: true, slug: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      },
+      properties: {
+        select: {
+          id: true, title: true, slug: true, publishStatus: true,
+          price: true, city: true, createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      },
+    },
+  });
+  if (!partner) throw new ApiError(404, 'Partner not found');
+
+  const [totalLeads, closedLeads, droppedLeads, totalListings, activeListings] = await Promise.all([
+    prisma.lead.count({ where: { assignedPartnerId: partnerId } }),
+    prisma.lead.count({ where: { assignedPartnerId: partnerId, status: 'CLOSED' } }),
+    prisma.lead.count({ where: { assignedPartnerId: partnerId, status: 'DROPPED' } }),
+    prisma.property.count({ where: { partnerId } }),
+    prisma.property.count({ where: { partnerId, publishStatus: 'APPROVED' } }),
+  ]);
+
+  return {
+    ...partner,
+    metrics: { totalLeads, closedLeads, droppedLeads, totalListings, activeListings },
+  };
+}
+
+// ─── SERVICE CATALOG MANAGEMENT ──────────────────────────────────────────────
+
+async function adminListServices() {
+  return prisma.service.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    include: { _count: { select: { subscriptions: true } } },
+  });
+}
+
+async function adminCreateService(data) {
+  return prisma.service.create({ data });
+}
+
+async function adminUpdateService(id, data) {
+  const svc = await prisma.service.findUnique({ where: { id } });
+  if (!svc) throw new ApiError(404, 'Service not found');
+  return prisma.service.update({ where: { id }, data });
+}
+
+async function adminDeleteService(id) {
+  const svc = await prisma.service.findUnique({ where: { id } });
+  if (!svc) throw new ApiError(404, 'Service not found');
+  // Soft-delete — keeps existing subscriptions resolvable
+  return prisma.service.update({ where: { id }, data: { isActive: false } });
 }
 
 // ─── PARTNER METRICS ─────────────────────────────────────────────────────────
@@ -495,6 +579,135 @@ async function getPartnerMetrics(skip, limit) {
   return { data, total };
 }
 
+// ─── USER DOCUMENT VAULT REVIEW ──────────────────────────────────────────────
+
+async function adminListDocuments(filters, skip, limit) {
+  const where = {};
+  if (filters.userId) where.userId = filters.userId;
+  if (filters.status) where.status = filters.status;
+  if (filters.documentType) where.documentType = filters.documentType;
+
+  const [data, total] = await Promise.all([
+    prisma.userDocument.findMany({
+      where, skip, take: limit,
+      orderBy: { uploadedAt: 'desc' },
+      include: { user: { select: { name: true, email: true, phone: true } } },
+    }),
+    prisma.userDocument.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function adminVerifyDocument(docId, action, note, adminId) {
+  const doc = await prisma.userDocument.findUnique({ where: { id: docId } });
+  if (!doc) throw new ApiError(404, 'Document not found');
+  if (doc.status === 'APPROVED') throw new ApiError(409, 'Document is already approved');
+
+  const isApprove = action === 'APPROVE';
+  if (!isApprove && !note) throw new ApiError(400, 'Rejection note is required');
+
+  return prisma.userDocument.update({
+    where: { id: docId },
+    data: {
+      status:            isApprove ? 'APPROVED' : 'REJECTED',
+      isVerified:        isApprove,
+      verifiedAt:        isApprove ? new Date() : null,
+      verifiedByAdminId: adminId,
+      rejectionNote:     isApprove ? null : note,
+    },
+  });
+}
+
+// ─── ADMIN DETAIL VIEWS ───────────────────────────────────────────────────────
+
+async function getPropertyByIdAdmin(propertyId) {
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    include: {
+      partner:  { select: { name: true, email: true, phone: true, companyName: true, partnerSubType: true } },
+      editLogs: { orderBy: { editedAt: 'desc' }, take: 10 },
+    },
+  });
+  if (!property) throw new ApiError(404, 'Property not found');
+  return property;
+}
+
+async function getKycByUserId(userId) {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, role: 'PARTNER' },
+    select: {
+      id: true, name: true, email: true, companyName: true, partnerSubType: true,
+      kycStatus: true, kycDocumentUrls: true, kycRejectionNote: true, kycVerifiedAt: true,
+      createdAt: true,
+    },
+  });
+  if (!user) throw new ApiError(404, 'Partner not found');
+  return user;
+}
+
+async function getUserByIdAdmin(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true, name: true, email: true, phone: true, phoneVerified: true, role: true,
+      isNRI: true, partnerSubType: true, companyName: true, bio: true,
+      profileImageUrl: true, websiteUrl: true,
+      isPremiumPartner: true, premiumValidUntil: true,
+      kycStatus: true, kycRejectionNote: true, kycVerifiedAt: true,
+      createdAt: true, updatedAt: true,
+    },
+  });
+  if (!user) throw new ApiError(404, 'User not found');
+  return user;
+}
+
+// ─── CONTACT INBOX ────────────────────────────────────────────────────────────
+
+async function listContactMessages(filters, skip, limit) {
+  const where = {};
+  if (filters.isRead !== undefined) where.isRead = filters.isRead === 'true';
+
+  const [data, total] = await Promise.all([
+    prisma.contactMessage.findMany({
+      where, skip, take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: { user: { select: { name: true, email: true, role: true } } },
+    }),
+    prisma.contactMessage.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function markContactRead(id) {
+  const msg = await prisma.contactMessage.findUnique({ where: { id } });
+  if (!msg) throw new ApiError(404, 'Contact message not found');
+  return prisma.contactMessage.update({ where: { id }, data: { isRead: true } });
+}
+
+// ─── TEAM MEMBER CRUD ─────────────────────────────────────────────────────────
+
+async function adminListTeam() {
+  return prisma.teamMember.findMany({
+    orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+  });
+}
+
+async function adminCreateTeamMember(data) {
+  return prisma.teamMember.create({ data });
+}
+
+async function adminUpdateTeamMember(id, data) {
+  const member = await prisma.teamMember.findUnique({ where: { id } });
+  if (!member) throw new ApiError(404, 'Team member not found');
+  return prisma.teamMember.update({ where: { id }, data });
+}
+
+async function adminDeleteTeamMember(id) {
+  const member = await prisma.teamMember.findUnique({ where: { id } });
+  if (!member) throw new ApiError(404, 'Team member not found');
+  return prisma.teamMember.delete({ where: { id } });
+}
+
 module.exports = {
   getLeadById, getAllLeads, assignLead,
   getPendingProperties, approveProperty, rejectProperty, editProperty,
@@ -504,5 +717,46 @@ module.exports = {
   getAllTickets, updateTicketStatus,
   getAllLoans, updateLoanStatus,
   getAllUsers, changeUserRole,
-  getPartnerMetrics,
+  getPartnerMetrics, getPartnerById,
+  adminListServices, adminCreateService, adminUpdateService, adminDeleteService,
+  getPropertyByIdAdmin, getKycByUserId, getUserByIdAdmin,
+  listContactMessages, markContactRead,
+  adminListTeam, adminCreateTeamMember, adminUpdateTeamMember, adminDeleteTeamMember,
+  adminListDocuments, adminVerifyDocument,
+  listVideoTours, updateVideoTour,
 };
+
+// ─── VIDEO TOUR MANAGEMENT ────────────────────────────────────────────────────
+
+async function listVideoTours(filters, skip, limit) {
+  const where = {};
+  if (filters.status) where.status = filters.status;
+  if (filters.assignedTo) where.assignedTo = filters.assignedTo;
+
+  const [data, total] = await prisma.$transaction([
+    prisma.videoTourRequest.findMany({
+      where, skip, take: limit,
+      include: {
+        user:     { select: { id: true, name: true, email: true, phone: true, isNRI: true } },
+        property: { select: { id: true, title: true, slug: true, city: true, images: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.videoTourRequest.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function updateVideoTour(id, { assignedTo, videoUrl, scheduledAt, adminNote, status }) {
+  const tour = await prisma.videoTourRequest.findUnique({ where: { id } });
+  if (!tour) throw new ApiError(404, 'Video tour request not found');
+
+  const data = {};
+  if (assignedTo !== undefined) { data.assignedTo = assignedTo; data.status = 'ASSIGNED'; }
+  if (videoUrl    !== undefined) { data.videoUrl   = videoUrl;   data.status = 'COMPLETED'; data.completedAt = new Date(); }
+  if (scheduledAt !== undefined) data.scheduledAt = new Date(scheduledAt);
+  if (adminNote   !== undefined) data.adminNote   = adminNote;
+  if (status      !== undefined) data.status      = status;
+
+  return prisma.videoTourRequest.update({ where: { id }, data });
+}

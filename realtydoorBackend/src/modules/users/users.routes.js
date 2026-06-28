@@ -40,4 +40,8 @@ router.post('/loan',     requirePhone, ctrl.createLoanApplication);
 router.get('/loan',                   ctrl.getMyLoanApplications);
 router.get('/loan/:id',               ctrl.getLoanApplicationById);
 
+// Video tour requests (NRI feature — Phase 2)
+router.post('/video-tour',  requirePhone, ctrl.requestVideoTour);
+router.get('/video-tours',               ctrl.getMyVideoTours);
+
 module.exports = router;

@@ -1,0 +1,18 @@
+// ─── TEAM MEMBER ──────────────────────────────────────────────────────────────
+// Internal roster shown on the About / Team page (§16 admin panel).
+// Admin-managed only — not buyer/partner-facing in the API.
+
+model TeamMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  title     String
+  email     String?
+  phone     String?
+  avatarUrl String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}

@@ -53,4 +53,11 @@ async function getFinanceSummary(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary };
+async function getAnalytics(req, res, next) {
+  try {
+    const analytics = await service.getPartnerAnalytics(req.user.id);
+    success(res, analytics);
+  } catch (err) { next(err); }
+}
+
+module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary, getAnalytics };

@@ -17,13 +17,15 @@ router.patch('/leads/:id/approve-drop',  leadsCtrl.approveDrop);
 router.patch('/leads/:id/reject-drop',   leadsCtrl.rejectDrop);
 
 // Property approval + admin edit
-router.get('/properties', ctrl.getPendingProperties);
+router.get('/properties',              ctrl.getPendingProperties);
+router.get('/properties/:id',          ctrl.getPropertyById);
 router.patch('/properties/:id/approve', ctrl.approveProperty);
-router.patch('/properties/:id/reject', ctrl.rejectProperty);
-router.patch('/properties/:id', ctrl.editProperty);
+router.patch('/properties/:id/reject',  ctrl.rejectProperty);
+router.patch('/properties/:id',         ctrl.editProperty);
 
 // KYC
-router.get('/kyc', ctrl.getPendingKyc);
+router.get('/kyc',                ctrl.getPendingKyc);
+router.get('/kyc/:userId',        ctrl.getKycById);
 router.patch('/kyc/:userId/verify', ctrl.verifyKyc);
 
 // Revenue
@@ -32,8 +34,9 @@ router.get('/revenue', ctrl.getRevenue);
 // Audit logs
 router.get('/audit-logs', ctrl.getAuditLogs);
 
-// Partner metrics
-router.get('/partners', ctrl.getPartnerMetrics);
+// Partner metrics + drill-down
+router.get('/partners',     ctrl.getPartnerMetrics);
+router.get('/partners/:id', ctrl.getPartnerById);
 
 // Escrow (admin actions)
 router.patch('/escrow/:id/release', escrowCtrl.releaseEscrow);
@@ -60,6 +63,31 @@ router.patch('/loan/:id/status',  ctrl.updateLoanStatus);
 
 // User management & role assignment
 router.get('/users',              ctrl.getUsers);
+router.get('/users/:id',          ctrl.getUserById);
 router.patch('/users/:id/role',   ctrl.changeUserRole);
+
+// Service catalog management
+router.get('/services',         ctrl.listServices);
+router.post('/services',        ctrl.createService);
+router.patch('/services/:id',   ctrl.updateService);
+router.delete('/services/:id',  ctrl.deleteService);
+
+// User document vault review (Pattern 12)
+router.get('/documents',               ctrl.listDocuments);
+router.patch('/documents/:id/verify',  ctrl.verifyDocument);
+
+// Contact inbox
+router.get('/contact',             ctrl.listContactMessages);
+router.patch('/contact/:id/read',  ctrl.markContactRead);
+
+// Team roster
+router.get('/team',          ctrl.listTeam);
+router.post('/team',         ctrl.createTeamMember);
+router.patch('/team/:id',    ctrl.updateTeamMember);
+router.delete('/team/:id',   ctrl.deleteTeamMember);
+
+// Video tour requests
+router.get('/video-tours',        ctrl.listVideoTours);
+router.patch('/video-tours/:id',  ctrl.updateVideoTour);
 
 module.exports = router;

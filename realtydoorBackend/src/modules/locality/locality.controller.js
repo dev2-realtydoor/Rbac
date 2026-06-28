@@ -44,4 +44,11 @@ async function deleteLocality(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getLocality, listLocalities, getLocalityById, upsertLocality, deleteLocality };
+async function getCitiesSummary(req, res, next) {
+  try {
+    const summary = await service.getCitiesSummary();
+    success(res, summary);
+  } catch (err) { next(err); }
+}
+
+module.exports = { getLocality, listLocalities, getLocalityById, upsertLocality, deleteLocality, getCitiesSummary };

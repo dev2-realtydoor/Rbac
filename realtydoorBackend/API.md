@@ -477,6 +477,106 @@ Upload videos to a listing.
 
 ---
 
+### GET /api/properties/:id/edit-logs
+
+Admin and partner edit history for a listing.
+
+**Auth:** PARTNER + KYC verified (must own the listing)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64log...",
+      "propertyId": "64prop...",
+      "field": "price",
+      "oldValue": "8500000",
+      "newValue": "9000000",
+      "changedBy": "Rajdeep Kumar",
+      "changedAt": "2024-02-01T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Errors:** `404` listing not found or not yours.
+
+---
+
+### GET /api/properties/:id/construction-updates
+
+Construction milestone timeline for an under-construction property.
+
+**Auth:** Public (property must be APPROVED)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64cu...",
+      "propertyId": "64prop...",
+      "milestoneTitle": "Foundation complete",
+      "description": "Foundation and basement work finished.",
+      "mediaUrls": ["https://cdn.realtydoor.in/progress1.jpg"],
+      "completionPct": 25,
+      "postedAt": "2024-03-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+Ordered by `postedAt` descending. Returns `[]` if no updates yet.
+
+**Errors:** `404` property not found or not APPROVED.
+
+---
+
+### POST /api/properties/:id/construction-updates
+
+Add a construction milestone update to an under-construction listing.
+
+**Auth:** PARTNER + KYC verified (must own the listing, `propertyStatus` must be `UNDER_CONSTRUCTION`)
+
+**Request Body:**
+
+```json
+{
+  "milestoneTitle": "Foundation complete",
+  "description": "Foundation and basement work finished ahead of schedule.",
+  "mediaUrls": ["https://cdn.realtydoor.in/progress1.jpg"],
+  "completionPct": 25
+}
+```
+
+`milestoneTitle` required (3–200 chars). `description` max 2000. `mediaUrls` max 10 URLs. `completionPct` 0–100 integer.
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "64cu...",
+    "propertyId": "64prop...",
+    "milestoneTitle": "Foundation complete",
+    "completionPct": 25,
+    "postedAt": "2024-03-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` property not found or not yours · `400` property is not UNDER_CONSTRUCTION.
+
+---
+
 ## 3. Leads
 
 ### POST /api/leads
@@ -1199,6 +1299,80 @@ Single loan application (must belong to authenticated user).
 
 ---
 
+### POST /api/user/video-tour
+
+Request a virtual video tour of a property (NRI feature). Prevents duplicate requests — throws 409 if an active PENDING or ASSIGNED request already exists for the same property.
+
+**Auth:** USER + phone verified
+
+**Request Body:**
+
+```json
+{
+  "propertyId": "64abc...",
+  "userNote": "Please show the view from the balcony and car parking area."
+}
+```
+
+`propertyId` required. `userNote` optional (max 500 chars).
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Video tour requested",
+  "data": {
+    "id": "64vt...",
+    "userId": "64user...",
+    "propertyId": "64prop...",
+    "userNote": "Please show the balcony view.",
+    "status": "PENDING",
+    "createdAt": "2024-03-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` property not found or not APPROVED · `409` active request already exists for this property.
+
+---
+
+### GET /api/user/video-tours
+
+All video tour requests submitted by the authenticated user.
+
+**Auth:** USER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64vt...",
+      "status": "ASSIGNED",
+      "userNote": "Please show the balcony view.",
+      "scheduledAt": "2024-03-10T11:00:00.000Z",
+      "videoUrl": null,
+      "adminNote": "Our partner will call you before the tour.",
+      "createdAt": "2024-03-01T00:00:00.000Z",
+      "property": {
+        "title": "3 BHK Flat in Baner",
+        "slug": "3-bhk-flat-in-baner-...",
+        "city": "Pune",
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+      }
+    }
+  ]
+}
+```
+
+Ordered by `createdAt` descending.
+
+---
+
 ## 5. Partner
 
 All `/api/partner/*` routes require `authenticate` + `requirePartner`.
@@ -1351,6 +1525,46 @@ Partner finance / escrow summary.
 ```
 
 `escrowHeld` is the sum in ₹ of HELD escrow on the partner's closed leads.
+
+---
+
+### GET /api/partner/analytics
+
+Analytics dashboard for the authenticated partner.
+
+**Auth:** PARTNER + KYC verified
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "totalLeads": 12,
+    "leadsByStatus": {
+      "UNASSIGNED": 0,
+      "ASSIGNED": 5,
+      "SITE_VISIT_SCHEDULED": 2,
+      "SITE_VISIT_DONE": 2,
+      "CLOSED": 2,
+      "DROPPED": 1
+    },
+    "totalListings": 8,
+    "listingsByStatus": {
+      "PENDING_APPROVAL": 1,
+      "APPROVED": 6,
+      "REJECTED": 0,
+      "ARCHIVED": 1
+    },
+    "escrowHeld": 150000,
+    "closedDeals": 2,
+    "conversionRate": 16.67
+  }
+}
+```
+
+`conversionRate` is `closedDeals / totalLeads * 100` (percent, 2 decimal places). `escrowHeld` in ₹.
 
 ---
 
@@ -1751,6 +1965,37 @@ Public point-lookup for a city + locality pair. Both params are required.
 
 ---
 
+### GET /api/locality-insights/cities-summary
+
+Aggregated city-level stats for all cities that have locality insight data. Used by the homepage city cards.
+
+**Auth:** Public
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "city": "Pune",
+      "localityCount": 12,
+      "avgPricePerSqft": 22500,
+      "trendingCount": 4
+    },
+    {
+      "city": "Mumbai",
+      "localityCount": 8,
+      "avgPricePerSqft": 45000,
+      "trendingCount": 3
+    }
+  ]
+}
+```
+
+---
+
 ### GET /api/locality-insights
 
 List all locality records (paginated). Optional city filter.
@@ -1836,10 +2081,10 @@ Inbound WhatsApp reply handler. Buyer replies to site-visit feedback message; th
 
 **Keyword → Status mapping:**
 
-| Keyword | Status |
+| Keyword | Status set on lead |
 |---|---|
-| `1`, `yes`, `interested` | `INTERESTED` |
-| `2`, `no`, `not interested` | `NOT_INTERESTED` |
+| `1`, `yes`, `interested` | `VERIFIED_CLOSED` |
+| `2`, `no`, `not interested` | `VERIFIED_DROPPED` |
 | `3`, `maybe`, `still deciding` | `STILL_DECIDING` |
 
 **Response `200`:** `{ "status": "ok" }`
@@ -2064,6 +2309,18 @@ Admin edit of any property. Protected fields `partnerId` and `slug` are silently
 
 ---
 
+### GET /api/admin/properties/:id
+
+Full property detail by ID (any publishStatus).
+
+**Auth:** ADMIN
+
+**Response `200`:** Full property record including partner info and edit logs.
+
+**Errors:** `404` property not found.
+
+---
+
 ### GET /api/admin/kyc
 
 Partners with `PENDING_REVIEW` KYC (paginated).
@@ -2112,6 +2369,37 @@ Approve or reject partner KYC.
 `action`: `"APPROVE"` or `"REJECT"`. `note` required when rejecting.
 
 **Response `200`:** `{ "success": true, "message": "KYC approved", "data": null }`
+
+---
+
+### GET /api/admin/kyc/:userId
+
+Full KYC record for a specific partner including uploaded document URLs.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64user...",
+    "name": "Rajdeep Kumar",
+    "email": "rajdeep@example.com",
+    "kycStatus": "PENDING_REVIEW",
+    "kycDocumentUrls": ["https://cdn.realtydoor.in/kyc/pan.pdf", "https://cdn.realtydoor.in/kyc/aadhar.pdf"],
+    "kycRejectionNote": null,
+    "kycVerifiedAt": null,
+    "partnerSubType": "AGENT",
+    "companyName": "RealtyPro Solutions",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` user not found.
 
 ---
 
@@ -2204,6 +2492,40 @@ Performance metrics for all KYC-verified partners.
   ]
 }
 ```
+
+---
+
+### GET /api/admin/partners/:id
+
+Full partner profile drill-down including all leads and listings.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64user...",
+    "name": "Rajdeep Kumar",
+    "email": "rajdeep@example.com",
+    "companyName": "RealtyPro Solutions",
+    "partnerSubType": "AGENT",
+    "kycStatus": "VERIFIED",
+    "kycVerifiedAt": "2024-02-01T00:00:00.000Z",
+    "totalLeads": 12,
+    "closedLeads": 3,
+    "totalListings": 8,
+    "activeListings": 6,
+    "escrowHeld": 150000,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` partner not found.
 
 ---
 
@@ -2589,6 +2911,385 @@ Change a user's role. Syncs to Clerk publicMetadata and creates audit log.
 
 ---
 
+### GET /api/admin/users/:id
+
+Full user profile by ID.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64user...",
+    "name": "Suresh Mehta",
+    "email": "suresh@example.com",
+    "phone": "+919876543210",
+    "phoneVerified": true,
+    "role": "USER",
+    "isNRI": false,
+    "kycStatus": "NOT_SUBMITTED",
+    "partnerSubType": null,
+    "companyName": null,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` user not found.
+
+---
+
+### GET /api/admin/services
+
+All services in the catalog (including inactive ones).
+
+**Auth:** ADMIN
+
+**Response `200`:** Array of service objects (same shape as public `GET /api/services` but includes `isActive: false` records).
+
+---
+
+### POST /api/admin/services
+
+Create a new service in the catalog.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{
+  "name": "Legal Advisory Pack",
+  "shortDesc": "Expert property legal guidance",
+  "description": "Full legal support for property purchase...",
+  "price": 9999,
+  "category": "LEGAL",
+  "features": ["Title search", "Agreement drafting", "Registration support"],
+  "isActive": true,
+  "sortOrder": 2,
+  "imageUrl": "https://cdn.realtydoor.in/services/legal.jpg"
+}
+```
+
+`category`: `MAINTENANCE` · `CONSTRUCTION` · `LEGAL` · `LOAN` · `VALUATION`
+
+**Response `201`:** `{ "success": true, "message": "Service created", "data": { "id": "64svc...", ... } }`
+
+---
+
+### PATCH /api/admin/services/:id
+
+Update a service in the catalog.
+
+**Auth:** ADMIN
+
+**Request Body:** Partial service fields (at least one required).
+
+**Response `200`:** `{ "success": true, "message": "Success", "data": { ... } }`
+
+**Errors:** `404` service not found.
+
+---
+
+### DELETE /api/admin/services/:id
+
+Deactivate a service (`isActive → false`). Does not hard-delete.
+
+**Auth:** ADMIN
+
+**Response `200`:** `{ "success": true, "message": "Service deactivated", "data": null }`
+
+**Errors:** `404` service not found.
+
+---
+
+### GET /api/admin/documents
+
+All user documents (paginated). Filter by status or userId.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `PENDING_REVIEW` · `APPROVED` · `REJECTED` · `EXPIRED` |
+| `userId` | string | Filter by user ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64doc...",
+        "documentType": "PAN_CARD",
+        "fileUrl": "https://cdn.realtydoor.in/docs/pan.pdf",
+        "fileName": "pan_card.pdf",
+        "status": "PENDING_REVIEW",
+        "isVerified": false,
+        "uploadedAt": "2024-01-10T00:00:00.000Z",
+        "user": { "name": "Suresh Mehta", "email": "suresh@example.com" }
+      }
+    ],
+    "pagination": { "total": 30, "page": 1, "limit": 20, "totalPages": 2, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/documents/:id/verify
+
+Approve or reject a user document.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{ "action": "APPROVE", "note": "Document verified successfully." }
+```
+
+`action`: `"APPROVE"` or `"REJECT"`. `note` required when rejecting.
+
+**Response `200`:** `{ "success": true, "message": "Document approved", "data": { "id": "...", "status": "APPROVED", "isVerified": true } }`
+
+**Errors:** `404` document not found.
+
+---
+
+### GET /api/admin/contact
+
+All contact form submissions (paginated).
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `isRead` | boolean | Filter unread (`false`) or read (`true`) |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64msg...",
+        "name": "Priya Sharma",
+        "email": "priya@example.com",
+        "phone": "+919876543210",
+        "subject": "Inquiry about listing",
+        "message": "I would like to know more...",
+        "isRead": false,
+        "createdAt": "2024-02-10T00:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 45, "page": 1, "limit": 20, "totalPages": 3, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/contact/:id/read
+
+Mark a contact form message as read.
+
+**Auth:** ADMIN
+
+**Request Body:** _(none)_
+
+**Response `200`:** `{ "success": true, "message": "Marked as read", "data": { "id": "...", "isRead": true } }`
+
+**Errors:** `404` message not found.
+
+---
+
+### GET /api/admin/team
+
+All team members (active and inactive).
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64tm...",
+      "name": "Priya Sharma",
+      "title": "Head of Operations",
+      "email": "priya@realtydoor.in",
+      "phone": "+919876543210",
+      "avatarUrl": "https://cdn.realtydoor.in/team/priya.jpg",
+      "isActive": true,
+      "sortOrder": 1
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/admin/team
+
+Add a team member.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{
+  "name": "Priya Sharma",
+  "title": "Head of Operations",
+  "email": "priya@realtydoor.in",
+  "phone": "+919876543210",
+  "avatarUrl": "https://cdn.realtydoor.in/team/priya.jpg",
+  "isActive": true,
+  "sortOrder": 1
+}
+```
+
+`name` and `title` required.
+
+**Response `201`:** `{ "success": true, "message": "Team member added", "data": { "id": "64tm...", ... } }`
+
+---
+
+### PATCH /api/admin/team/:id
+
+Update a team member.
+
+**Auth:** ADMIN
+
+**Request Body:** Partial team member fields (at least one required).
+
+**Response `200`:** `{ "success": true, "message": "Team member updated", "data": { ... } }`
+
+**Errors:** `404` team member not found.
+
+---
+
+### DELETE /api/admin/team/:id
+
+Remove a team member.
+
+**Auth:** ADMIN
+
+**Response `200`:** `{ "success": true, "message": "Team member removed", "data": null }`
+
+**Errors:** `404` team member not found.
+
+---
+
+### GET /api/admin/video-tours
+
+All video tour requests (paginated). Filter by status or assignedTo.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `PENDING` · `ASSIGNED` · `COMPLETED` |
+| `assignedTo` | string | Filter by assigned partner ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64vt...",
+        "status": "PENDING",
+        "userNote": "Please show the balcony view.",
+        "scheduledAt": null,
+        "videoUrl": null,
+        "adminNote": null,
+        "assignedTo": null,
+        "createdAt": "2024-03-01T00:00:00.000Z",
+        "user": {
+          "id": "64user...",
+          "name": "Suresh Mehta",
+          "email": "suresh@example.com",
+          "phone": "+919876543210",
+          "isNRI": true
+        },
+        "property": {
+          "id": "64prop...",
+          "title": "3 BHK Flat in Baner",
+          "slug": "3-bhk-flat-in-baner-...",
+          "city": "Pune",
+          "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+        }
+      }
+    ],
+    "pagination": { "total": 15, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/video-tours/:id
+
+Assign a partner to a tour, schedule it, or mark it completed with a video URL.
+
+**Auth:** ADMIN
+
+**Request Body:** At least one field required.
+
+```json
+{
+  "assignedTo":  "64partner...",
+  "scheduledAt": "2024-03-10T11:00:00.000Z",
+  "adminNote":   "Our partner will call you 1 hour before.",
+  "videoUrl":    "https://cdn.realtydoor.in/tours/baner-tour.mp4",
+  "status":      "ASSIGNED"
+}
+```
+
+| Field | Effect |
+|-------|--------|
+| `assignedTo` | Sets partner and auto-sets `status → ASSIGNED` |
+| `videoUrl` | Sets video URL, auto-sets `status → COMPLETED` and `completedAt → now` |
+| `scheduledAt` | Sets the scheduled tour datetime |
+| `adminNote` | Internal note shown to user |
+| `status` | Manual status override |
+
+**Response `200`:** `{ "success": true, "message": "Video tour updated", "data": { ... } }`
+
+**Errors:** `404` video tour request not found.
+
+---
+
 ## Enums Reference
 
 ### Role
@@ -2635,6 +3336,12 @@ Change a user's role. Syncs to Clerk publicMetadata and creates audit log.
 
 ### ContentBlock Type
 `BLOG_POST` · `FAQ` · `BANNER` · `ANNOUNCEMENT` · `PAGE`
+
+### VideoTourRequestStatus
+`PENDING` · `ASSIGNED` · `COMPLETED`
+
+### BuyerFeedbackStatus (WATI webhook)
+`VERIFIED_CLOSED` · `VERIFIED_DROPPED` · `STILL_DECIDING`
 
 ### Notification Type (examples)
 `LEAD_NEW` · `LEAD_ASSIGNED` · `PROPERTY_APPROVED` · `PROPERTY_REJECTED` · `PROPERTY_EDITED_BY_ADMIN` · `KYC_PENDING` · `KYC_UPDATE` · `DEAL_CLOSED` · `ESCROW_REFUNDED` · `SERVICE_ACTIVATED` · `LOAN_STATUS_UPDATE` · `ANNOUNCEMENT`

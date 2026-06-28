@@ -9,6 +9,7 @@ const {
   raiseTicketSchema,
   createLoanSchema,
   updateProfileSchema,
+  requestVideoTourSchema,
 } = require('./users.validator');
 
 async function requestPhoneOtp(req, res, next) {
@@ -131,9 +132,25 @@ async function updateProfile(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function requestVideoTour(req, res, next) {
+  try {
+    const { propertyId, userNote } = requestVideoTourSchema.parse(req.body);
+    const tour = await service.requestVideoTour(req.user.id, propertyId, userNote);
+    res.status(201).json({ success: true, data: tour, message: 'Video tour requested' });
+  } catch (err) { next(err); }
+}
+
+async function getMyVideoTours(req, res, next) {
+  try {
+    const tours = await service.getMyVideoTours(req.user.id);
+    success(res, tours);
+  } catch (err) { next(err); }
+}
+
 module.exports = {
   requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile,
   getDocuments, uploadDocument, getSubscriptions,
   raiseTicket, getMyTickets, getMyTicketById, verifyTicket,
   createLoanApplication, getMyLoanApplications, getLoanApplicationById,
+  requestVideoTour, getMyVideoTours,
 };

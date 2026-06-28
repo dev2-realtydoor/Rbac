@@ -16,6 +16,7 @@ const server = app.listen(PORT, () => {
 
   require('./src/jobs/whatsappFeedback').start();
   require('./src/jobs/expiredOtp').start();
+  require('./src/jobs/stillDecidingFollowup').start();
 });
 
 process.on('unhandledRejection', (err) => {

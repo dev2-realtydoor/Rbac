@@ -4,31 +4,30 @@ const { sendBuyerFeedbackRequest } = require('../lib/wati');
 const logger = require('../lib/logger');
 
 // Runs every hour.
-// Fires WhatsApp buyer feedback bot 24h after site visit OTP verified (PRD §5 Leakage 1).
-// If buyer says "Yes" but partner marked "Dropped", Admin gets a discrepancy alert.
+// Sends a second WhatsApp nudge 7 days after the buyer replied STILL_DECIDING (Appendix C.4).
 function start() {
   cron.schedule('0 * * * *', async () => {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     let leads;
     try {
       leads = await prisma.lead.findMany({
         where: {
-          isOtpVerified: true,
-          otpVerifiedAt: { lte: cutoff },
-          whatsappSentAt: null,
-          status: { not: 'DROPPED' },
+          buyerFeedbackStatus: 'STILL_DECIDING',
+          feedbackReceivedAt: { not: null, lte: cutoff },
+          secondFollowupSentAt: null,
+          status: { notIn: ['DROPPED', 'CLOSED'] },
         },
         include: { assignedPartner: { select: { name: true, companyName: true } } },
       });
     } catch (err) {
-      logger.error('[WhatsAppFeedbackJob] DB query failed', { error: err.message, stack: err.stack });
+      logger.error('[StillDecidingJob] DB query failed', { error: err.message, stack: err.stack });
       return;
     }
 
     if (!leads.length) return;
 
-    logger.info(`[WhatsAppFeedbackJob] Processing ${leads.length} lead(s)`);
+    logger.info(`[StillDecidingJob] Processing ${leads.length} lead(s)`);
 
     for (const lead of leads) {
       try {
@@ -39,11 +38,11 @@ function start() {
         await sendBuyerFeedbackRequest(lead.buyerPhone, partnerName);
         await prisma.lead.update({
           where: { id: lead.id },
-          data: { whatsappSentAt: new Date(), buyerFeedbackStatus: 'PENDING' },
+          data: { secondFollowupSentAt: new Date() },
         });
-        logger.info('[WhatsAppFeedbackJob] Feedback sent', { leadId: lead.id });
+        logger.info('[StillDecidingJob] Follow-up sent', { leadId: lead.id });
       } catch (err) {
-        logger.error('[WhatsAppFeedbackJob] Failed for lead', {
+        logger.error('[StillDecidingJob] Failed for lead', {
           leadId: lead.id,
           error: err.message,
         });
@@ -51,7 +50,7 @@ function start() {
     }
   });
 
-  logger.info('[Jobs] WhatsApp feedback job scheduled (every hour)');
+  logger.info('[Jobs] STILL_DECIDING 7-day follow-up job scheduled (every hour)');
 }
 
 module.exports = { start };
