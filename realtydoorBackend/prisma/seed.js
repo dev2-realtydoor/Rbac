@@ -949,6 +949,129 @@ async function main() {
     console.log(`⏭   B2B      : (already exists)`);
   }
 
+  // ── 20. Vendors ───────────────────────────────────────────────────────────
+
+  const vendorDefs = [
+    { name: 'Quick Fix Plumbers',   phone: '+919800100200', email: 'quickfix@example.com',  category: 'PLUMBING',   city: 'Pune', notes: 'Available 7 days. Specialises in burst pipes and tap fittings.', isActive: true },
+    { name: 'Safe Electric Co.',    phone: '+919800200300', email: 'safeelec@example.com',  category: 'ELECTRICAL', city: 'Pune', notes: 'ESCI-certified. 24hr emergency callout.', isActive: true },
+    { name: 'ColorCraft Painters',  phone: '+919800300400', email: null,                     category: 'PAINTING',   city: 'Pune', notes: 'Interior and exterior painting. 3-year warranty.', isActive: true },
+    { name: 'BuildRight Carpentry', phone: '+919800400500', email: 'buildright@example.com', category: 'CARPENTRY',  city: 'Pune', notes: 'Modular kitchen and wardrobe specialists.', isActive: true },
+    { name: 'All-Round Services',   phone: '+919800500600', email: null,                     category: 'GENERAL',    city: 'Pune', notes: 'General handyman — minor repairs and maintenance.', isActive: false },
+  ];
+
+  const vendors = [];
+  for (const vData of vendorDefs) {
+    const existing = await prisma.vendor.findFirst({ where: { phone: vData.phone } });
+    if (!existing) {
+      const v = await prisma.vendor.create({ data: vData });
+      console.log(`✅  Vendor   : ${vData.name} [${vData.category}]`);
+      vendors.push(v);
+    } else {
+      console.log(`⏭   Vendor   : ${vData.name}`);
+      vendors.push(existing);
+    }
+  }
+  const [vendor1] = vendors;
+
+  // ── 21. Property Reviews ───────────────────────────────────────────────────
+
+  const reviewDefs = [
+    // Approved — visible publicly
+    {
+      userId: user.id, propertyId: propBaner.id,
+      rating: 5, title: 'Excellent flat — highly recommend',
+      body: 'The 3 BHK in Baner exceeded our expectations. Great construction quality, excellent ventilation, and the society amenities are top-notch. RealtyDoor made the entire process seamless.',
+      isApproved: true, moderatedAt: daysAgo(3), moderatedByAdminId: admin.id,
+    },
+    // Pending moderation — not yet public
+    {
+      userId: user2.id, propertyId: propBaner.id,
+      rating: 3, title: 'Good property, maintenance could improve',
+      body: 'The flat itself is well-designed but the society maintenance team is slow to respond. Lift was down for 2 days last month.',
+      isApproved: false,
+    },
+    // Approved on a different property
+    {
+      userId: user2.id, propertyId: propAundh.id,
+      rating: 4, title: 'Premium locality, worth the price',
+      body: 'The bungalow in Aundh is spacious and the private garden is a great bonus. Slightly over budget but quality justifies it.',
+      isApproved: true, moderatedAt: daysAgo(5), moderatedByAdminId: admin.id,
+    },
+  ];
+
+  const reviews = [];
+  for (const rData of reviewDefs) {
+    const existing = await prisma.propertyReview.findFirst({
+      where: { userId: rData.userId, propertyId: rData.propertyId },
+    });
+    if (!existing) {
+      const r = await prisma.propertyReview.create({ data: rData });
+      console.log(`✅  Review   : ${rData.rating}★ [${rData.isApproved ? 'APPROVED' : 'PENDING'}] by userId=${rData.userId}`);
+      reviews.push(r);
+    } else {
+      console.log(`⏭   Review   : (already exists)`);
+      reviews.push(existing);
+    }
+  }
+  const [review1] = reviews;
+
+  // ── 22. Disputes ──────────────────────────────────────────────────────────
+
+  const disputeDefs = [
+    // OPEN — just raised by user1 on the HELD escrow
+    {
+      userId: user2.id, type: 'ESCROW', referenceId: escrow2.id,
+      reason: 'Escrow held but deal fallen through',
+      description: 'The seller has withdrawn from the deal after the token was deposited. The escrow is still HELD and I need it refunded urgently. Please investigate and initiate the refund process.',
+      status: 'OPEN',
+    },
+    // UNDER_REVIEW — admin has acknowledged
+    {
+      userId: user.id, type: 'SERVICE', referenceId: sub.id,
+      reason: 'Vendor did not show up for scheduled visit',
+      description: 'The plumbing vendor was scheduled for 10 Jan but did not arrive. No advance notice was given. This has disrupted our schedule and the leaking tap is now causing water damage.',
+      status: 'UNDER_REVIEW',
+      adminNote: 'We have contacted Quick Fix Plumbers. A replacement visit has been rescheduled for tomorrow.',
+    },
+  ];
+
+  const disputes = [];
+  for (const dData of disputeDefs) {
+    const existing = await prisma.dispute.findFirst({
+      where: { userId: dData.userId, referenceId: dData.referenceId },
+    });
+    if (!existing) {
+      const d = await prisma.dispute.create({ data: dData });
+      console.log(`✅  Dispute  : [${dData.status}] ${dData.type} by userId=${dData.userId}`);
+      disputes.push(d);
+    } else {
+      console.log(`⏭   Dispute  : (already exists)`);
+      disputes.push(existing);
+    }
+  }
+  const [dispute1] = disputes;
+
+  // ── 23. Platform Config ───────────────────────────────────────────────────
+
+  const configDefs = [
+    { key: 'platform_name',          value: 'RealtyDoor',                                                      description: 'Platform display name',                         isPublic: true,  updatedByAdminId: admin.id },
+    { key: 'support_phone',          value: '+919000000001',                                                    description: 'Customer support WhatsApp number',               isPublic: true,  updatedByAdminId: admin.id },
+    { key: 'support_email',          value: 'support@realtydoor.in',                                            description: 'Customer support email address',                 isPublic: true,  updatedByAdminId: admin.id },
+    { key: 'rera_disclaimer',        value: 'RERA registrations vary by state. Verify at maharera.mahaonline.gov.in before investing.', description: 'RERA disclaimer shown on listings', isPublic: true, updatedByAdminId: admin.id },
+    { key: 'platform_commission_pct', value: '2',                                                               description: 'Platform commission % on closed deals',          isPublic: false, updatedByAdminId: admin.id },
+    { key: 'escrow_token_min_paise', value: '5000000',                                                          description: 'Minimum token advance in paise (₹50,000)',       isPublic: false, updatedByAdminId: admin.id },
+    { key: 'razorpay_webhook_secret', value: 'whsec_seed_placeholder',                                          description: 'Razorpay webhook HMAC signing secret',           isPublic: false, updatedByAdminId: admin.id },
+  ];
+
+  for (const cData of configDefs) {
+    await prisma.platformConfig.upsert({
+      where:  { key: cData.key },
+      update: cData,
+      create: cData,
+    });
+    console.log(`✅  Config   : ${cData.key} [${cData.isPublic ? 'public' : 'private'}]`);
+  }
+
   // ── Summary ───────────────────────────────────────────────────────────────
 
   console.log('\n──────────────────────────────────────────────────────────────');
@@ -967,6 +1090,10 @@ async function main() {
   console.log(`  escrowId       = ${escrow1.id}   ← RELEASED`);
   console.log(`  escrowHeldId   = ${escrow2.id}   ← HELD`);
   console.log(`  subscriptionId = ${sub.id}`);
+  console.log(`  vendorId       = ${vendor1?.id ?? 'see above'}`);
+  console.log(`  reviewId       = ${review1?.id ?? 'see above'}`);
+  console.log(`  disputeId      = ${dispute1?.id ?? 'see above'}`);
+  console.log(`  configKey      = support_phone  (use any key from platform config)`);
   console.log('\n  Clerk IDs set (replace before live auth testing):');
   console.log(`    ADMIN_CLERK_ID    = ${ADMIN_CLERK_ID}`);
   console.log(`    PARTNER_CLERK_ID  = ${PARTNER_CLERK_ID}`);

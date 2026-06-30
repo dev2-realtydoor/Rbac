@@ -44,4 +44,8 @@ router.get('/loan/:id',               ctrl.getLoanApplicationById);
 router.post('/video-tour',  requirePhone, ctrl.requestVideoTour);
 router.get('/video-tours',               ctrl.getMyVideoTours);
 
+// Disputes
+router.post('/disputes', ctrl.raiseDispute);
+router.get('/disputes',  ctrl.getMyDisputes);
+
 module.exports = router;

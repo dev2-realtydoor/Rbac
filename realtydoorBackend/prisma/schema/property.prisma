@@ -80,6 +80,7 @@ model Property {
   loanApplications    LoanApplication[]
   b2bConnections      B2BConnection[]
   videoTourRequests   VideoTourRequest[]
+  reviews             PropertyReview[]
 
   @@index([publishStatus, isB2BOnly])
   @@index([partnerId])

@@ -10,6 +10,7 @@ const {
   createLoanSchema,
   updateProfileSchema,
   requestVideoTourSchema,
+  raiseDisputeSchema,
 } = require('./users.validator');
 
 async function requestPhoneOtp(req, res, next) {
@@ -147,10 +148,26 @@ async function getMyVideoTours(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function raiseDispute(req, res, next) {
+  try {
+    const data = raiseDisputeSchema.parse(req.body);
+    const dispute = await service.raiseDispute(req.user.id, data);
+    created(res, dispute, 'Dispute raised');
+  } catch (err) { next(err); }
+}
+
+async function getMyDisputes(req, res, next) {
+  try {
+    const disputes = await service.getMyDisputes(req.user.id);
+    success(res, disputes);
+  } catch (err) { next(err); }
+}
+
 module.exports = {
   requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile,
   getDocuments, uploadDocument, getSubscriptions,
   raiseTicket, getMyTickets, getMyTicketById, verifyTicket,
   createLoanApplication, getMyLoanApplications, getLoanApplicationById,
   requestVideoTour, getMyVideoTours,
+  raiseDispute, getMyDisputes,
 };

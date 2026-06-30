@@ -15,7 +15,15 @@ const {
   updateTeamMemberSchema,
   verifyDocumentSchema,
   updateVideoTourSchema,
+  createVendorSchema,
+  updateVendorSchema,
+  adminResolveDisputeSchema,
+  moderateReviewSchema,
 } = require('./admin.validator');
+const disputeService = require('../disputes/disputes.service');
+const reviewService  = require('../reviews/reviews.service');
+const configService  = require('../config/config.service');
+const { upsertConfigSchema } = require('../config/config.validator');
 
 async function getLeadById(req, res, next) {
   try {
@@ -279,6 +287,14 @@ async function deleteService(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function uploadVideoTourFile(req, res, next) {
+  try {
+    if (!req.file) throw new ApiError(400, 'Video file is required');
+    const tour = await service.uploadVideoTourFile(req.params.id, req.file.path);
+    success(res, tour, 'Video uploaded and tour marked completed');
+  } catch (err) { next(err); }
+}
+
 async function listVideoTours(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
@@ -292,6 +308,98 @@ async function updateVideoTour(req, res, next) {
     const data = updateVideoTourSchema.parse(req.body);
     const tour = await service.updateVideoTour(req.params.id, data);
     success(res, tour, 'Video tour updated');
+  } catch (err) { next(err); }
+}
+
+async function listVendors(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.adminListVendors(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function createVendor(req, res, next) {
+  try {
+    const data = createVendorSchema.parse(req.body);
+    const vendor = await service.adminCreateVendor(data);
+    created(res, vendor, 'Vendor added');
+  } catch (err) { next(err); }
+}
+
+async function updateVendor(req, res, next) {
+  try {
+    const data = updateVendorSchema.parse(req.body);
+    const vendor = await service.adminUpdateVendor(req.params.id, data);
+    success(res, vendor, 'Vendor updated');
+  } catch (err) { next(err); }
+}
+
+async function deleteVendor(req, res, next) {
+  try {
+    const vendor = await service.adminDeleteVendor(req.params.id);
+    success(res, vendor, 'Vendor deactivated');
+  } catch (err) { next(err); }
+}
+
+async function getAnalytics(req, res, next) {
+  try {
+    const analytics = await service.getAdminAnalytics();
+    success(res, analytics);
+  } catch (err) { next(err); }
+}
+
+async function listDisputes(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await disputeService.adminListDisputes(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function resolveDispute(req, res, next) {
+  try {
+    const data = adminResolveDisputeSchema.parse(req.body);
+    const dispute = await disputeService.adminResolveDispute(req.params.id, data, req.user.id);
+    success(res, dispute, 'Dispute updated');
+  } catch (err) { next(err); }
+}
+
+async function listReviews(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await reviewService.adminListReviews(req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function moderateReview(req, res, next) {
+  try {
+    const { action } = moderateReviewSchema.parse(req.body);
+    const review = await reviewService.adminModerateReview(req.params.id, action, req.user.id);
+    success(res, review, `Review ${action === 'APPROVE' ? 'approved' : 'rejected'}`);
+  } catch (err) { next(err); }
+}
+
+async function listConfig(req, res, next) {
+  try {
+    const config = await configService.adminListConfig();
+    success(res, config);
+  } catch (err) { next(err); }
+}
+
+async function upsertConfig(req, res, next) {
+  try {
+    const data = upsertConfigSchema.parse(req.body);
+    const entry = await configService.adminUpsertConfig(req.params.key, data, req.user.id);
+    success(res, entry, 'Config updated');
+  } catch (err) { next(err); }
+}
+
+async function deleteConfig(req, res, next) {
+  try {
+    await configService.adminDeleteConfig(req.params.key);
+    success(res, null, 'Config key deleted');
   } catch (err) { next(err); }
 }
 
@@ -310,5 +418,10 @@ module.exports = {
   listContactMessages, markContactRead,
   listTeam, createTeamMember, updateTeamMember, deleteTeamMember,
   listServices, createService, updateService, deleteService,
-  listVideoTours, updateVideoTour,
+  listVideoTours, updateVideoTour, uploadVideoTourFile,
+  listVendors, createVendor, updateVendor, deleteVendor,
+  getAnalytics,
+  listDisputes, resolveDispute,
+  listReviews, moderateReview,
+  listConfig, upsertConfig, deleteConfig,
 };

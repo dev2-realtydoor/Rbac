@@ -120,6 +120,42 @@ const updateTeamMemberSchema = z.object({
   { message: 'At least one field must be provided' },
 );
 
+const createVendorSchema = z.object({
+  name:     z.string().min(2).max(100),
+  phone:    z.string().min(5).max(20),
+  email:    z.string().email().optional(),
+  category: z.enum(['PLUMBING', 'ELECTRICAL', 'PAINTING', 'GENERAL', 'CARPENTRY', 'OTHER']),
+  city:     z.string().max(100).optional(),
+  notes:    z.string().max(500).optional(),
+});
+
+const updateVendorSchema = z.object({
+  name:     z.string().min(2).max(100).optional(),
+  phone:    z.string().min(5).max(20).optional(),
+  email:    z.string().email().optional(),
+  category: z.enum(['PLUMBING', 'ELECTRICAL', 'PAINTING', 'GENERAL', 'CARPENTRY', 'OTHER']).optional(),
+  city:     z.string().max(100).optional(),
+  notes:    z.string().max(500).optional(),
+  isActive: z.boolean().optional(),
+}).refine(
+  (d) => Object.keys(d).length > 0,
+  { message: 'At least one field must be provided' },
+);
+
+const adminResolveDisputeSchema = z.object({
+  status:    z.enum(['UNDER_REVIEW', 'RESOLVED', 'CLOSED']).optional(),
+  adminNote: z.string().min(5).max(1000).optional(),
+}).refine(
+  (d) => d.status !== undefined || d.adminNote !== undefined,
+  { message: 'At least one of status or adminNote must be provided' },
+);
+
+const moderateReviewSchema = z.object({
+  action: z.enum(['APPROVE', 'REJECT'], {
+    errorMap: () => ({ message: 'action must be APPROVE or REJECT' }),
+  }),
+});
+
 const updateVideoTourSchema = z.object({
   assignedTo:  objectId.optional(),
   videoUrl:    z.string().url().optional(),
@@ -145,4 +181,8 @@ module.exports = {
   updateTeamMemberSchema,
   verifyDocumentSchema,
   updateVideoTourSchema,
+  createVendorSchema,
+  updateVendorSchema,
+  adminResolveDisputeSchema,
+  moderateReviewSchema,
 };

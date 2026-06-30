@@ -45,6 +45,15 @@ const requestVideoTourSchema = z.object({
   userNote:   z.string().max(500).optional(),
 });
 
+const raiseDisputeSchema = z.object({
+  type:        z.enum(['LEAD', 'ESCROW', 'SERVICE'], {
+    errorMap: () => ({ message: 'type must be LEAD, ESCROW, or SERVICE' }),
+  }),
+  referenceId: objectId,
+  reason:      z.string().min(5).max(200),
+  description: z.string().min(10).max(2000),
+});
+
 module.exports = {
   requestPhoneOtpSchema,
   verifyPhoneOtpSchema,
@@ -54,4 +63,5 @@ module.exports = {
   createLoanSchema,
   updateProfileSchema,
   requestVideoTourSchema,
+  raiseDisputeSchema,
 };

@@ -1,0 +1,17 @@
+// ─── PLATFORM CONFIG ──────────────────────────────────────────────────────────
+// Admin-managed key-value store for platform settings (Razorpay config,
+// RERA state mappings, commission rates, feature flags, etc.).
+// Keys with isPublic: true are exposed on GET /api/config/public.
+
+model PlatformConfig {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  updatedByAdminId String? @db.ObjectId
+
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublic])
+}

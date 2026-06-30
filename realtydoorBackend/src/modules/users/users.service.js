@@ -237,10 +237,14 @@ async function getMyVideoTours(userId) {
   });
 }
 
+const disputeService = require('../disputes/disputes.service');
+
 module.exports = {
   requestPhoneOtp, verifyPhoneOtp, getMyLeads, toggleFavorite, getFavorites, updateProfile,
   getDocuments, uploadDocument, getSubscriptions,
   raiseTicket, getMyTickets, getMyTicketById, verifyTicket,
   createLoanApplication, getMyLoanApplications, getLoanApplicationById,
   requestVideoTour, getMyVideoTours,
+  raiseDispute:    disputeService.raiseDispute,
+  getMyDisputes:   disputeService.getMyDisputes,
 };

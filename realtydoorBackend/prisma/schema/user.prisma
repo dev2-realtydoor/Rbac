@@ -51,4 +51,6 @@ model User {
   videoTourRequests VideoTourRequest[]
   contactMessages   ContactMessage[]
   loanApplications  LoanApplication[]
+  disputes          Dispute[]
+  reviews           PropertyReview[]
 }

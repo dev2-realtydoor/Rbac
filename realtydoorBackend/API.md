@@ -577,6 +577,81 @@ Add a construction milestone update to an under-construction listing.
 
 ---
 
+### GET /api/properties/:id/reviews
+
+Approved public reviews for a property.
+
+**Auth:** None
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64rev...",
+      "rating": 4,
+      "title": "Great locality, minor maintenance issues",
+      "body": "The flat is well-designed but the society maintenance could be better.",
+      "createdAt": "2024-02-15T00:00:00.000Z",
+      "user": { "name": "Suresh Mehta", "profileImageUrl": null }
+    }
+  ]
+}
+```
+
+Only returns `isApproved: true` reviews. `:id` is the property's MongoDB ObjectId (not slug).
+
+**Errors:** `404` property not found or not approved.
+
+---
+
+### POST /api/properties/:id/reviews
+
+Submit a review for a property. One review per user per property. Reviews require admin approval before appearing publicly.
+
+**Auth:** USER
+
+**Request Body:**
+
+```json
+{
+  "rating": 4,
+  "title": "Great locality, minor maintenance issues",
+  "body": "The flat is well-designed but the society maintenance could be better."
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `rating` | integer | Yes | 1–5 |
+| `title` | string | No | 3–150 chars |
+| `body` | string | No | 10–3000 chars |
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Review submitted — pending moderation",
+  "data": {
+    "id": "64rev...",
+    "propertyId": "64prop...",
+    "rating": 4,
+    "title": "Great locality, minor maintenance issues",
+    "body": "The flat is well-designed...",
+    "isApproved": false,
+    "createdAt": "2024-02-15T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` property not found · `409` you have already reviewed this property.
+
+---
+
 ## 3. Leads
 
 ### POST /api/leads
@@ -1373,6 +1448,86 @@ Ordered by `createdAt` descending.
 
 ---
 
+### POST /api/user/disputes
+
+Raise a dispute against a Lead, EscrowTransaction, or UserSubscription. One active dispute per record at a time.
+
+**Auth:** USER
+
+**Request Body:**
+
+```json
+{
+  "type":        "ESCROW",
+  "referenceId": "64escrow...",
+  "reason":      "Payment deducted but escrow not created",
+  "description": "I paid ₹50,000 via Razorpay on 10 Jan but the escrow transaction shows FAILED. Please investigate."
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | string | Yes | `LEAD` · `ESCROW` · `SERVICE` |
+| `referenceId` | ObjectId | Yes | ID of the Lead, EscrowTransaction, or UserSubscription |
+| `reason` | string | Yes | Short summary (5–200 chars) |
+| `description` | string | Yes | Full details (10–2000 chars) |
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Dispute raised",
+  "data": {
+    "id": "64dis...",
+    "userId": "64user...",
+    "type": "ESCROW",
+    "referenceId": "64escrow...",
+    "reason": "Payment deducted but escrow not created",
+    "description": "I paid ₹50,000...",
+    "status": "OPEN",
+    "adminNote": null,
+    "resolvedAt": null,
+    "createdAt": "2024-03-01T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` referenced record not found or does not belong to you · `409` active dispute already exists for this record.
+
+---
+
+### GET /api/user/disputes
+
+All disputes raised by the authenticated user.
+
+**Auth:** USER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64dis...",
+      "type": "ESCROW",
+      "referenceId": "64escrow...",
+      "reason": "Payment deducted but escrow not created",
+      "status": "UNDER_REVIEW",
+      "adminNote": "We are investigating with the payment gateway.",
+      "resolvedAt": null,
+      "createdAt": "2024-03-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+Ordered by `createdAt` descending.
+
+---
+
 ## 5. Partner
 
 All `/api/partner/*` routes require `authenticate` + `requirePartner`.
@@ -2053,7 +2208,34 @@ Create or update (upsert by city + locality).
 
 ---
 
-## 12. Webhooks
+## 12. Platform Config (Public)
+
+### GET /api/config/public
+
+Returns all platform configuration keys that have `isPublic: true`. No authentication required. Used by the frontend to read non-sensitive settings (e.g. feature flags, RERA state info, support phone numbers).
+
+**Auth:** None
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "support_phone": "+919876543210",
+    "support_email": "support@realtydoor.in",
+    "rera_disclaimer": "RERA registrations vary by state. Verify before investing.",
+    "platform_name": "RealtyDoor"
+  }
+}
+```
+
+Returns a flat key → value object. Only keys with `isPublic: true` appear here.
+
+---
+
+## 13. Webhooks
 
 ### POST /api/webhooks/razorpay
 
@@ -2101,7 +2283,7 @@ Handles `user.created`, `user.updated`, `user.deleted` from Clerk.
 
 ---
 
-## 13. Admin
+## 14. Admin
 
 All `/api/admin/*` routes require `authenticate` + `requireAdmin`.
 
@@ -3290,6 +3472,400 @@ Assign a partner to a tour, schedule it, or mark it completed with a video URL.
 
 ---
 
+### POST /api/admin/video-tours/:id/upload
+
+Upload the recorded video file for a tour request. Stores it in S3 and auto-sets `status → COMPLETED`.
+
+**Auth:** ADMIN
+
+**Request Body:** `multipart/form-data`
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `video` | File | Yes | Accepted formats: `mp4`, `mov`, `webm`, `avi`. Max size: **500 MB** |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Video uploaded and tour marked completed",
+  "data": {
+    "id": "64tour...",
+    "userId": "64user...",
+    "propertyId": "64prop...",
+    "videoUrl": "https://your-bucket.s3.ap-south-1.amazonaws.com/video-tours/uuid.mp4",
+    "status": "COMPLETED",
+    "completedAt": "2024-03-10T13:45:00.000Z",
+    "scheduledAt": "2024-03-10T11:00:00.000Z",
+    "assignedTo": "64partner...",
+    "adminNote": "Our partner will call you 1 hour before.",
+    "createdAt": "2024-03-08T09:00:00.000Z",
+    "updatedAt": "2024-03-10T13:45:00.000Z"
+  }
+}
+```
+
+**Errors:** `400` no file attached · `400` unsupported file type · `404` tour request not found.
+
+---
+
+### GET /api/admin/vendors
+
+Admin-managed vendor catalog (paginated). Vendors are dispatched on service tickets.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `category` | string | `PLUMBING` · `ELECTRICAL` · `PAINTING` · `GENERAL` · `CARPENTRY` · `OTHER` |
+| `city` | string | Filter by city |
+| `isActive` | boolean | `true` (default) or `false` |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64ven...",
+        "name": "Ramesh Plumbers",
+        "phone": "+919876543210",
+        "email": "ramesh@example.com",
+        "category": "PLUMBING",
+        "city": "Pune",
+        "notes": "Available 7 days, handles burst pipes.",
+        "isActive": true,
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 8, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### POST /api/admin/vendors
+
+Add a vendor to the catalog.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{
+  "name":     "Ramesh Plumbers",
+  "phone":    "+919876543210",
+  "email":    "ramesh@example.com",
+  "category": "PLUMBING",
+  "city":     "Pune",
+  "notes":    "Available 7 days, handles burst pipes."
+}
+```
+
+`name`, `phone`, and `category` are required. `category`: `PLUMBING` · `ELECTRICAL` · `PAINTING` · `GENERAL` · `CARPENTRY` · `OTHER`
+
+**Response `201`:** `{ "success": true, "message": "Vendor added", "data": { "id": "64ven...", ... } }`
+
+---
+
+### PATCH /api/admin/vendors/:id
+
+Update a vendor's details.
+
+**Auth:** ADMIN
+
+**Request Body:** Partial vendor fields (at least one required).
+
+**Response `200`:** `{ "success": true, "message": "Vendor updated", "data": { ... } }`
+
+**Errors:** `404` vendor not found.
+
+---
+
+### DELETE /api/admin/vendors/:id
+
+Deactivate a vendor (`isActive → false`). Does not hard-delete.
+
+**Auth:** ADMIN
+
+**Response `200`:** `{ "success": true, "message": "Vendor deactivated", "data": { ... } }`
+
+**Errors:** `404` vendor not found.
+
+---
+
+### GET /api/admin/analytics
+
+Platform-level funnel and cohort analytics for the last 6 months.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "totals": {
+      "users": 1240,
+      "partners": 87,
+      "activeListings": 412
+    },
+    "leadFunnel": {
+      "UNASSIGNED": 45,
+      "ASSIGNED": 30,
+      "SITE_VISIT_SCHEDULED": 18,
+      "SITE_VISIT_DONE": 12,
+      "CLOSED": 56,
+      "DROPPED": 22
+    },
+    "propertyFunnel": {
+      "PENDING_APPROVAL": 8,
+      "APPROVED": 412,
+      "REJECTED": 14,
+      "ARCHIVED": 3
+    },
+    "userGrowth": [
+      { "month": "2023-10", "users": 85, "partners": 6 },
+      { "month": "2023-11", "users": 102, "partners": 9 },
+      { "month": "2023-12", "users": 130, "partners": 11 },
+      { "month": "2024-01", "users": 148, "partners": 14 },
+      { "month": "2024-02", "users": 167, "partners": 18 },
+      { "month": "2024-03", "users": 190, "partners": 22 }
+    ],
+    "revenueByMonth": [
+      { "month": "2023-10", "revenue": 49950 },
+      { "month": "2023-11", "revenue": 69900 },
+      { "month": "2023-12", "revenue": 89850 },
+      { "month": "2024-01", "revenue": 119800 },
+      { "month": "2024-02", "revenue": 109750 },
+      { "month": "2024-03", "revenue": 149700 }
+    ]
+  }
+}
+```
+
+`revenueByMonth` reflects service subscription payments (`paymentStatus: SUCCESS`) only.
+
+---
+
+### GET /api/admin/disputes
+
+All disputes (paginated). Filter by status, type, or userId.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `status` | string | `OPEN` · `UNDER_REVIEW` · `RESOLVED` · `CLOSED` |
+| `type` | string | `LEAD` · `ESCROW` · `SERVICE` |
+| `userId` | string | Filter by user ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64dis...",
+        "type": "ESCROW",
+        "referenceId": "64escrow...",
+        "reason": "Payment deducted but escrow not created",
+        "description": "I paid ₹50,000...",
+        "status": "OPEN",
+        "adminNote": null,
+        "resolvedAt": null,
+        "createdAt": "2024-03-01T00:00:00.000Z",
+        "user": { "id": "64user...", "name": "Suresh Mehta", "email": "suresh@example.com", "phone": "+919876543210" }
+      }
+    ],
+    "pagination": { "total": 5, "page": 1, "limit": 20, "totalPages": 1, "hasNext": false, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/disputes/:id
+
+Update dispute status or add an admin note.
+
+**Auth:** ADMIN
+
+**Request Body:** At least one field required.
+
+```json
+{
+  "status":    "UNDER_REVIEW",
+  "adminNote": "We are investigating with the payment gateway team."
+}
+```
+
+`status`: `UNDER_REVIEW` · `RESOLVED` · `CLOSED`
+
+Setting `RESOLVED` or `CLOSED` stamps `resolvedAt` automatically.
+
+**Response `200`:** `{ "success": true, "message": "Dispute updated", "data": { ... } }`
+
+**Errors:** `404` dispute not found · `400` dispute is already closed.
+
+---
+
+### GET /api/admin/reviews
+
+All property reviews (paginated), including pending moderation.
+
+**Auth:** ADMIN
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|---|---|---|
+| `isApproved` | boolean | `true` (approved) · `false` (pending) |
+| `propertyId` | string | Filter by property ID |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64rev...",
+        "rating": 4,
+        "title": "Great locality",
+        "body": "Flat is well-designed...",
+        "isApproved": false,
+        "moderatedAt": null,
+        "createdAt": "2024-02-15T00:00:00.000Z",
+        "user":     { "id": "64user...", "name": "Suresh Mehta", "email": "suresh@example.com" },
+        "property": { "id": "64prop...", "title": "3 BHK Flat in Baner", "slug": "3-bhk-flat-in-baner-..." }
+      }
+    ],
+    "pagination": { "total": 22, "page": 1, "limit": 20, "totalPages": 2, "hasNext": true, "hasPrev": false }
+  }
+}
+```
+
+---
+
+### PATCH /api/admin/reviews/:id/moderate
+
+Approve or reject a property review. Approved reviews become publicly visible.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{ "action": "APPROVE" }
+```
+
+`action`: `"APPROVE"` or `"REJECT"`.
+
+**Response `200`:** `{ "success": true, "message": "Review approved", "data": { "id": "...", "isApproved": true, "moderatedAt": "..." } }`
+
+**Errors:** `404` review not found.
+
+---
+
+### GET /api/admin/config
+
+All platform config entries (including non-public ones).
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": [
+    {
+      "id": "64cfg...",
+      "key": "support_phone",
+      "value": "+919876543210",
+      "description": "Customer support WhatsApp number shown on website",
+      "isPublic": true,
+      "updatedByAdminId": "64admin...",
+      "updatedAt": "2024-01-10T00:00:00.000Z"
+    },
+    {
+      "id": "64cfg2...",
+      "key": "razorpay_webhook_secret",
+      "value": "whsec_...",
+      "description": "Razorpay webhook signing secret",
+      "isPublic": false,
+      "updatedByAdminId": "64admin...",
+      "updatedAt": "2024-01-05T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+Ordered alphabetically by `key`.
+
+---
+
+### PUT /api/admin/config/:key
+
+Create or update a config key. Upserts — creates if the key doesn't exist.
+
+**Auth:** ADMIN
+
+**URL Param:** `:key` is the string config key (e.g. `support_phone`, `platform_commission_percent`).
+
+**Request Body:**
+
+```json
+{
+  "value":       "+919876543210",
+  "description": "Customer support WhatsApp number",
+  "isPublic":    true
+}
+```
+
+`value` is required. `description` and `isPublic` are optional (omitting them preserves existing values on update).
+
+**Response `200`:** `{ "success": true, "message": "Config updated", "data": { "key": "support_phone", "value": "...", "isPublic": true, ... } }`
+
+---
+
+### DELETE /api/admin/config/:key
+
+Delete a platform config key permanently.
+
+**Auth:** ADMIN
+
+**Response `200`:** `{ "success": true, "message": "Config key deleted", "data": null }`
+
+**Errors:** `404` key not found.
+
+---
+
 ## Enums Reference
 
 ### Role
@@ -3342,6 +3918,15 @@ Assign a partner to a tour, schedule it, or mark it completed with a video URL.
 
 ### BuyerFeedbackStatus (WATI webhook)
 `VERIFIED_CLOSED` · `VERIFIED_DROPPED` · `STILL_DECIDING`
+
+### DisputeType
+`LEAD` · `ESCROW` · `SERVICE`
+
+### DisputeStatus
+`OPEN` · `UNDER_REVIEW` · `RESOLVED` · `CLOSED`
+
+### VendorCategory
+`PLUMBING` · `ELECTRICAL` · `PAINTING` · `GENERAL` · `CARPENTRY` · `OTHER`
 
 ### Notification Type (examples)
 `LEAD_NEW` · `LEAD_ASSIGNED` · `PROPERTY_APPROVED` · `PROPERTY_REJECTED` · `PROPERTY_EDITED_BY_ADMIN` · `KYC_PENDING` · `KYC_UPDATE` · `DEAL_CLOSED` · `ESCROW_REFUNDED` · `SERVICE_ACTIVATED` · `LOAN_STATUS_UPDATE` · `ANNOUNCEMENT`

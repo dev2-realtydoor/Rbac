@@ -1,0 +1,28 @@
+// ─── DISPUTE ──────────────────────────────────────────────────────────────────
+// Users raise disputes against Leads, EscrowTransactions, or UserSubscriptions.
+// Admin reviews and resolves. One active dispute per referenceId per user.
+
+model Dispute {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String        @db.ObjectId
+  user        User          @relation(fields: [userId], references: [id])
+
+  type        DisputeType
+  referenceId String        @db.ObjectId
+
+  reason      String
+  description String
+
+  status      DisputeStatus @default(OPEN)
+  adminNote   String?
+  resolvedAt  DateTime?
+  resolvedByAdminId String? @db.ObjectId
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([referenceId])
+  @@index([type, status])
+}

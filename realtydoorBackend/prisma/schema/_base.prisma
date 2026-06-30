@@ -127,6 +127,19 @@ enum CommissionStatus {
   DISPUTED
 }
 
+enum DisputeType {
+  LEAD
+  ESCROW
+  SERVICE
+}
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
+}
+
 enum LoanStatus {
   DOCUMENTS_PENDING
   DOCUMENTS_SUBMITTED

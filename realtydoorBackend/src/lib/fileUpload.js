@@ -118,6 +118,7 @@ const visitPhotoUploader     = buildUploader('visits',     IMAGE_FORMATS);
 const userDocUploader        = buildUploader('documents',  DOC_FORMATS);
 const ticketEvidenceUploader = buildUploader('tickets',    ALL_FORMATS);
 const cmsMediaUploader       = buildUploader('admin-cms',  MEDIA_FORMATS);
+const videoTourUploader      = buildUploader('video-tours', VIDEO_FORMATS, 500); // 500 MB
 
 async function deleteFile(s3Key) {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: s3Key }));
@@ -132,5 +133,6 @@ module.exports = {
   userDocUploader,
   ticketEvidenceUploader,
   cmsMediaUploader,
+  videoTourUploader,
   deleteFile,
 };

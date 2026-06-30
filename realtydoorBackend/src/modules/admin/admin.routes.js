@@ -6,6 +6,7 @@ const notifCtrl = require('../notifications/notifications.controller');
 const leadsCtrl = require('../leads/leads.controller');
 const { authenticate } = require('../../middleware/auth');
 const { requireAdmin } = require('../../middleware/requireRole');
+const { videoTourUploader } = require('../../lib/fileUpload');
 
 router.use(authenticate, requireAdmin);
 
@@ -87,7 +88,30 @@ router.patch('/team/:id',    ctrl.updateTeamMember);
 router.delete('/team/:id',   ctrl.deleteTeamMember);
 
 // Video tour requests
-router.get('/video-tours',        ctrl.listVideoTours);
-router.patch('/video-tours/:id',  ctrl.updateVideoTour);
+router.get('/video-tours',                                                   ctrl.listVideoTours);
+router.patch('/video-tours/:id',                                             ctrl.updateVideoTour);
+router.post('/video-tours/:id/upload', videoTourUploader.single('video'),   ctrl.uploadVideoTourFile);
+
+// Vendor catalog
+router.get('/vendors',         ctrl.listVendors);
+router.post('/vendors',        ctrl.createVendor);
+router.patch('/vendors/:id',   ctrl.updateVendor);
+router.delete('/vendors/:id',  ctrl.deleteVendor);
+
+// Platform analytics (funnel + cohorts)
+router.get('/analytics', ctrl.getAnalytics);
+
+// Dispute management
+router.get('/disputes',       ctrl.listDisputes);
+router.patch('/disputes/:id', ctrl.resolveDispute);
+
+// Review moderation
+router.get('/reviews',                ctrl.listReviews);
+router.patch('/reviews/:id/moderate', ctrl.moderateReview);
+
+// Platform config
+router.get('/config',         ctrl.listConfig);
+router.put('/config/:key',    ctrl.upsertConfig);
+router.delete('/config/:key', ctrl.deleteConfig);
 
 module.exports = router;

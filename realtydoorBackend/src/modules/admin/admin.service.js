@@ -723,8 +723,109 @@ module.exports = {
   listContactMessages, markContactRead,
   adminListTeam, adminCreateTeamMember, adminUpdateTeamMember, adminDeleteTeamMember,
   adminListDocuments, adminVerifyDocument,
-  listVideoTours, updateVideoTour,
+  listVideoTours, updateVideoTour, uploadVideoTourFile,
+  adminListVendors, adminCreateVendor, adminUpdateVendor, adminDeleteVendor,
+  getAdminAnalytics,
 };
+
+// ─── VENDOR CATALOG ───────────────────────────────────────────────────────────
+
+async function adminListVendors(filters, skip, limit) {
+  const where = {};
+  if (filters.category) where.category = filters.category;
+  if (filters.city)     where.city     = filters.city;
+  if (filters.isActive !== undefined) where.isActive = filters.isActive !== 'false';
+
+  const [data, total] = await Promise.all([
+    prisma.vendor.findMany({ where, skip, take: limit, orderBy: { name: 'asc' } }),
+    prisma.vendor.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function adminCreateVendor(data) {
+  return prisma.vendor.create({ data });
+}
+
+async function adminUpdateVendor(id, data) {
+  const vendor = await prisma.vendor.findUnique({ where: { id } });
+  if (!vendor) throw new ApiError(404, 'Vendor not found');
+  return prisma.vendor.update({ where: { id }, data });
+}
+
+async function adminDeleteVendor(id) {
+  const vendor = await prisma.vendor.findUnique({ where: { id } });
+  if (!vendor) throw new ApiError(404, 'Vendor not found');
+  return prisma.vendor.update({ where: { id }, data: { isActive: false } });
+}
+
+// ─── PLATFORM ANALYTICS ───────────────────────────────────────────────────────
+
+async function getAdminAnalytics() {
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+  const [
+    leadFunnel,
+    propertyFunnel,
+    userGrowth,
+    revenueMonthly,
+    totalUsers,
+    totalPartners,
+    totalProperties,
+  ] = await Promise.all([
+    // Lead pipeline funnel
+    prisma.lead.groupBy({ by: ['status'], _count: { _all: true } }),
+
+    // Property approval funnel
+    prisma.property.groupBy({ by: ['publishStatus'], _count: { _all: true } }),
+
+    // User signups per month (last 6 months)
+    prisma.user.findMany({
+      where: { createdAt: { gte: sixMonthsAgo } },
+      select: { createdAt: true, role: true },
+    }),
+
+    // Service revenue per month (last 6 months)
+    prisma.userSubscription.findMany({
+      where: { paymentStatus: 'SUCCESS', startDate: { gte: sixMonthsAgo } },
+      select: { startDate: true, amountPaid: true },
+    }),
+
+    prisma.user.count({ where: { role: 'USER' } }),
+    prisma.user.count({ where: { role: 'PARTNER' } }),
+    prisma.property.count({ where: { publishStatus: 'APPROVED' } }),
+  ]);
+
+  // Build monthly buckets (last 6 months)
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const growthByMonth = Object.fromEntries(months.map((m) => [m, { users: 0, partners: 0 }]));
+  userGrowth.forEach(({ createdAt, role }) => {
+    const key = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+    if (growthByMonth[key]) {
+      if (role === 'USER')    growthByMonth[key].users++;
+      if (role === 'PARTNER') growthByMonth[key].partners++;
+    }
+  });
+
+  const revenueByMonth = Object.fromEntries(months.map((m) => [m, 0]));
+  revenueMonthly.forEach(({ startDate, amountPaid }) => {
+    const key = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`;
+    if (revenueByMonth[key] !== undefined) revenueByMonth[key] += amountPaid;
+  });
+
+  return {
+    totals: { users: totalUsers, partners: totalPartners, activeListings: totalProperties },
+    leadFunnel: Object.fromEntries(leadFunnel.map((r) => [r.status, r._count._all])),
+    propertyFunnel: Object.fromEntries(propertyFunnel.map((r) => [r.publishStatus, r._count._all])),
+    userGrowth: months.map((m) => ({ month: m, ...growthByMonth[m] })),
+    revenueByMonth: months.map((m) => ({ month: m, revenue: revenueByMonth[m] })),
+  };
+}
 
 // ─── VIDEO TOUR MANAGEMENT ────────────────────────────────────────────────────
 
@@ -745,6 +846,16 @@ async function listVideoTours(filters, skip, limit) {
     prisma.videoTourRequest.count({ where }),
   ]);
   return { data, total };
+}
+
+async function uploadVideoTourFile(id, fileUrl) {
+  const tour = await prisma.videoTourRequest.findUnique({ where: { id } });
+  if (!tour) throw new ApiError(404, 'Video tour request not found');
+
+  return prisma.videoTourRequest.update({
+    where: { id },
+    data: { videoUrl: fileUrl, status: 'COMPLETED', completedAt: new Date() },
+  });
 }
 
 async function updateVideoTour(id, { assignedTo, videoUrl, scheduledAt, adminNote, status }) {

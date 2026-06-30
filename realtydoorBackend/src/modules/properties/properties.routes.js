@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const ctrl = require('./properties.controller');
+const reviewsRouter = require('../reviews/reviews.routes');
 const { authenticate } = require('../../middleware/auth');
 const { requirePartner } = require('../../middleware/requireRole');
 const { requireKyc } = require('../../middleware/requireKyc');
@@ -9,6 +10,9 @@ const { propertyImageUploader, propertyVideoUploader } = require('../../lib/file
 router.get('/', ctrl.search);
 router.get('/featured', ctrl.getFeatured);
 router.get('/:slug', ctrl.getBySlug);
+
+// Reviews (public GET, authenticated POST)
+router.use('/:propertyId/reviews', reviewsRouter);
 
 // Public — construction timeline
 router.get('/:id/construction-updates', ctrl.getConstructionUpdates);

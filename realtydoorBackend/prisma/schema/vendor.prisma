@@ -1,0 +1,20 @@
+// ─── VENDOR ───────────────────────────────────────────────────────────────────
+// Admin-managed vendor catalog. Vendors are dispatched on ServiceTickets.
+// Replaces free-text vendorName/vendorPhone fields on tickets over time.
+
+model Vendor {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  phone     String
+  email     String?
+  category  String
+  city      String?
+  notes     String?
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category, isActive])
+  @@index([isActive])
+}
