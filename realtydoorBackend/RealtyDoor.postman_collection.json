@@ -118,6 +118,10 @@
       "key": "configKey",
       "value": "support_phone",
       "description": "Platform config key for GET/PUT/DELETE /api/admin/config/:key"
+    },
+    {
+      "key": "supportTicketId",
+      "value": ""
     }
   ],
   "auth": {
@@ -2799,6 +2803,358 @@
               "body": "{\"success\":true,\"data\":{\"totalLeads\":12,\"leadsByStatus\":{\"UNASSIGNED\":0,\"ASSIGNED\":5,\"SITE_VISIT_SCHEDULED\":2,\"SITE_VISIT_DONE\":2,\"CLOSED\":2,\"DROPPED\":1},\"totalListings\":8,\"listingsByStatus\":{\"PENDING_APPROVAL\":1,\"APPROVED\":6,\"REJECTED\":0,\"ARCHIVED\":1},\"escrowHeld\":150000,\"closedDeals\":2,\"conversionRate\":16.67}}"
             }
           ]
+        },
+        {
+          "name": "Settings",
+          "item": [
+            {
+              "name": "Get Settings",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/settings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "settings"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Settings",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"visitDays\":[\"Mon\",\"Tue\",\"Wed\",\"Thu\",\"Fri\",\"Sat\"],\"visitFromTime\":\"10:00\",\"visitToTime\":\"19:00\",\"notifNewLead\":true,\"notifLeadExpiring\":true,\"notifEscrowReleased\":true,\"notifListingUpdate\":true,\"notifWeeklyReport\":false,\"leadAutoAccept\":false,\"leadPauseOverloaded\":true,\"leadPreferredLocalities\":[\"Baner\",\"Kothrud\"]}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Settings",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/settings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "settings"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"visitDays\": [\n    \"Mon\",\n    \"Tue\",\n    \"Wed\",\n    \"Thu\",\n    \"Fri\",\n    \"Sat\"\n  ],\n  \"visitFromTime\": \"10:00\",\n  \"visitToTime\": \"19:00\",\n  \"notifWeeklyReport\": true,\n  \"leadPauseOverloaded\": true,\n  \"leadPreferredLocalities\": [\n    \"Baner\",\n    \"Kothrud\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Saved",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Settings saved\",\"data\":{\"visitDays\":[\"Mon\",\"Tue\",\"Wed\",\"Thu\",\"Fri\",\"Sat\"],\"visitFromTime\":\"10:00\",\"visitToTime\":\"19:00\",\"notifWeeklyReport\":true}}"
+                },
+                {
+                  "name": "400 - At least one field required",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"At least one field required\"}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Bank Account",
+          "item": [
+            {
+              "name": "Get Bank Account",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/bank-account",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "bank-account"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Bank Account",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"bankName\":\"HDFC Bank\",\"bankBranch\":\"HSR Layout Branch, Bangalore\",\"bankAccountNo\":\"XXXX XXXX 6280\",\"bankIfsc\":\"HDFC0000634\",\"bankHolderName\":\"Ravi Kumar\",\"razorpayRouteAccountId\":\"acc_0qK8WnNRouteX\",\"bankLinkedAt\":\"2024-01-10T00:00:00.000Z\"}}"
+                }
+              ]
+            },
+            {
+              "name": "Update Bank Account",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/bank-account",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "bank-account"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"bankName\": \"HDFC Bank\",\n  \"bankBranch\": \"HSR Layout Branch, Bangalore\",\n  \"bankAccountNo\": \"50100123456280\",\n  \"bankIfsc\": \"HDFC0000634\",\n  \"bankHolderName\": \"Ravi Kumar\",\n  \"razorpayRouteAccountId\": \"acc_0qK8WnNRouteX\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Bank Updated",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Bank account updated\",\"data\":{\"bankName\":\"HDFC Bank\",\"bankIfsc\":\"HDFC0000634\",\"bankLinkedAt\":\"2024-03-10T00:00:00.000Z\"}}"
+                },
+                {
+                  "name": "400 - Invalid IFSC code",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Invalid IFSC code\"}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Support Tickets",
+          "item": [
+            {
+              "name": "List Support Tickets",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/support-tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "support-tickets"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Tickets",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"data\":[{\"id\":\"{{supportTicketId}}\",\"ticketNo\":\"SUP-1042\",\"subject\":\"Escrow release delayed for D-0038\",\"category\":\"ESCROW\",\"status\":\"OPEN\",\"adminReply\":null,\"createdAt\":\"2024-06-27T00:00:00.000Z\"}],\"pagination\":{\"total\":3,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+                }
+              ]
+            },
+            {
+              "name": "Raise Support Ticket",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/support-tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "support-tickets"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"subject\": \"Escrow release delayed for D-0038\",\n  \"description\": \"The deal was closed 5 days ago but the escrow has not been released yet. Please investigate.\",\n  \"category\": \"ESCROW\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "201 - Ticket Raised",
+                  "status": "Created",
+                  "code": 201,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Support ticket raised\",\"data\":{\"id\":\"{{supportTicketId}}\",\"ticketNo\":\"SUP-1043\",\"subject\":\"Escrow release delayed for D-0038\",\"category\":\"ESCROW\",\"status\":\"OPEN\",\"createdAt\":\"2024-07-03T00:00:00.000Z\"}}"
+                },
+                {
+                  "name": "400 - subject: String must contain at least 5 character(s)",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"subject: String must contain at least 5 character(s)\"}"
+                }
+              ]
+            },
+            {
+              "name": "Get Support Ticket Detail",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/partner/support-tickets/{{supportTicketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "support-tickets",
+                    "{{supportTicketId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Ticket Detail",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"{{supportTicketId}}\",\"ticketNo\":\"SUP-1042\",\"subject\":\"Escrow release delayed for D-0038\",\"description\":\"The deal was closed 5 days ago but the escrow has not been released yet.\",\"category\":\"ESCROW\",\"status\":\"RESOLVED\",\"adminReply\":\"Escrow has been released. Funds will reflect in your account within T+1.\",\"repliedAt\":\"2024-06-28T14:00:00.000Z\",\"resolvedAt\":\"2024-06-28T14:00:00.000Z\",\"createdAt\":\"2024-06-27T00:00:00.000Z\"}}"
+                },
+                {
+                  "name": "404 - Support ticket not found",
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Support ticket not found\"}"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -4169,6 +4525,55 @@
               ]
             },
             {
+              "name": "Get Ticket Detail",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/tickets/{{ticketId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "tickets",
+                    "{{ticketId}}"
+                  ]
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - Ticket Detail",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"Success\",\"data\":{\"id\":\"{{ticketId}}\",\"subject\":\"Leaking kitchen tap\",\"description\":\"Kitchen tap has been dripping for 2 days.\",\"category\":\"PLUMBING\",\"status\":\"RESOLVED\",\"priority\":\"HIGH\",\"adminNotes\":\"Vendor dispatched on 2024-01-15.\",\"vendorName\":\"Quick Fix Plumbers\",\"vendorPhone\":\"+919800100200\",\"resolvedAt\":\"2024-01-15T00:00:00.000Z\",\"createdAt\":\"2024-01-13T00:00:00.000Z\",\"user\":{\"name\":\"Suresh Mehta\",\"email\":\"suresh@example.com\",\"phone\":\"+919000000003\"},\"subscription\":{\"service\":{\"name\":\"Maintenance Premium\",\"category\":\"MAINTENANCE\"}}}}"
+                },
+                {
+                  "name": "404 - Ticket not found",
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Ticket not found\"}"
+                }
+              ]
+            },
+            {
               "name": "Update Ticket Status",
               "request": {
                 "method": "PATCH",
@@ -4421,6 +4826,112 @@
                 },
                 {
                   "name": "404 – Not Found",
+                  "status": "Not Found",
+                  "code": 404,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"User not found\"}"
+                }
+              ]
+            },
+            {
+              "name": "Suspend / Unsuspend User",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/admin/users/{{userId}}/suspend",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "users",
+                    "{{userId}}",
+                    "suspend"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"suspend\": true,\n  \"reason\": \"Spamming property listings\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "response": [
+                {
+                  "name": "200 - User Suspended",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"User suspended\",\"data\":{\"id\":\"{{userId}}\",\"name\":\"Suresh Mehta\",\"isSuspended\":true,\"suspendedAt\":\"2024-03-10T10:00:00.000Z\",\"suspendReason\":\"Spamming property listings\"}}"
+                },
+                {
+                  "name": "200 - User Unsuspended",
+                  "status": "OK",
+                  "code": 200,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":true,\"message\":\"User unsuspended\",\"data\":{\"id\":\"{{userId}}\",\"isSuspended\":false,\"suspendedAt\":null,\"suspendReason\":null}}"
+                },
+                {
+                  "name": "400 - \"suspend\" must be a boolean",
+                  "status": "Bad Request",
+                  "code": 400,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"\\\"suspend\\\" must be a boolean\"}"
+                },
+                {
+                  "name": "403 - Cannot suspend an admin account",
+                  "status": "Forbidden",
+                  "code": 403,
+                  "_postman_previewlanguage": "json",
+                  "header": [
+                    {
+                      "key": "Content-Type",
+                      "value": "application/json"
+                    }
+                  ],
+                  "cookie": [],
+                  "body": "{\"success\":false,\"message\":\"Cannot suspend an admin account\"}"
+                },
+                {
+                  "name": "404 - User not found",
                   "status": "Not Found",
                   "code": 404,
                   "_postman_previewlanguage": "json",

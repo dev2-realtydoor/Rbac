@@ -1,6 +1,12 @@
-const { success } = require('../../utils/ApiResponse');
+const { success, created } = require('../../utils/ApiResponse');
+const { parsePagination, paginate } = require('../../utils/pagination');
 const service = require('./partners.service');
-const { updateProfileSchema } = require('./partners.validator');
+const {
+  updateProfileSchema,
+  updateSettingsSchema,
+  updateBankAccountSchema,
+  createSupportTicketSchema,
+} = require('./partners.validator');
 const ApiError = require('../../utils/ApiError');
 
 const VALID_LISTING_STATUSES = ['PENDING_APPROVAL', 'APPROVED', 'REJECTED'];
@@ -60,4 +66,63 @@ async function getAnalytics(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary, getAnalytics };
+async function getSettings(req, res, next) {
+  try {
+    const settings = await service.getSettings(req.user.id);
+    success(res, settings);
+  } catch (err) { next(err); }
+}
+
+async function updateSettings(req, res, next) {
+  try {
+    const data     = updateSettingsSchema.parse(req.body);
+    const settings = await service.updateSettings(req.user.id, data);
+    success(res, settings, 'Settings saved');
+  } catch (err) { next(err); }
+}
+
+async function getBankAccount(req, res, next) {
+  try {
+    const bank = await service.getBankAccount(req.user.id);
+    success(res, bank);
+  } catch (err) { next(err); }
+}
+
+async function updateBankAccount(req, res, next) {
+  try {
+    const data = updateBankAccountSchema.parse(req.body);
+    const bank = await service.updateBankAccount(req.user.id, data);
+    success(res, bank, 'Bank account updated');
+  } catch (err) { next(err); }
+}
+
+async function getSupportTickets(req, res, next) {
+  try {
+    const { page, limit, skip } = parsePagination(req.query);
+    const { data, total } = await service.getSupportTickets(req.user.id, req.query, skip, limit);
+    success(res, paginate(data, total, page, limit));
+  } catch (err) { next(err); }
+}
+
+async function getSupportTicketById(req, res, next) {
+  try {
+    const ticket = await service.getSupportTicketById(req.user.id, req.params.id);
+    success(res, ticket);
+  } catch (err) { next(err); }
+}
+
+async function createSupportTicket(req, res, next) {
+  try {
+    const data   = createSupportTicketSchema.parse(req.body);
+    const ticket = await service.createSupportTicket(req.user.id, data);
+    created(res, ticket, 'Support ticket raised');
+  } catch (err) { next(err); }
+}
+
+module.exports = {
+  submitKyc, getProfile, updateProfile, getListing, getMyListings,
+  getFinanceSummary, getAnalytics,
+  getSettings, updateSettings,
+  getBankAccount, updateBankAccount,
+  getSupportTickets, getSupportTicketById, createSupportTicket,
+};

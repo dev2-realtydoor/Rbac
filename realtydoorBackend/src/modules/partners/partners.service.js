@@ -67,28 +67,111 @@ async function getMyListings(partnerId, status) {
 }
 
 async function getFinanceSummary(partnerId) {
-  const [totalLeads, closedLeads] = await Promise.all([
+  const now          = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [totalLeads, allEscrows, thisMonthEscrows] = await Promise.all([
     prisma.lead.count({ where: { assignedPartnerId: partnerId } }),
-    prisma.lead.findMany({
-      where: { assignedPartnerId: partnerId, status: 'CLOSED' },
-      include: {
-        escrowTransactions: {
-          where: { status: 'HELD' },
-          select: { amount: true },
-        },
+    prisma.escrowTransaction.findMany({
+      where: { lead: { assignedPartnerId: partnerId } },
+      select: { status: true, amount: true, releasedAt: true, heldAt: true },
+    }),
+    prisma.escrowTransaction.findMany({
+      where: {
+        lead: { assignedPartnerId: partnerId },
+        status: 'RELEASED',
+        releasedAt: { gte: startOfMonth },
       },
+      select: { amount: true },
     }),
   ]);
 
-  const escrowHeld = closedLeads
-    .flatMap((l) => l.escrowTransactions)
-    .reduce((sum, e) => sum + e.amount, 0);
+  const heldEscrows     = allEscrows.filter((e) => e.status === 'HELD');
+  const releasedEscrows = allEscrows.filter((e) => e.status === 'RELEASED');
 
   return {
     totalLeads,
-    closedDeals: closedLeads.length,
-    escrowHeld,
+    closedDeals:         releasedEscrows.length,
+    escrowHeld:          heldEscrows.reduce((s, e) => s + e.amount, 0),
+    pendingCount:        heldEscrows.length,
+    releasedTotal:       releasedEscrows.reduce((s, e) => s + e.amount, 0),
+    releasedThisMonth:   thisMonthEscrows.reduce((s, e) => s + e.amount, 0),
+    payoutCountThisMonth: thisMonthEscrows.length,
   };
+}
+
+// ─── SETTINGS ────────────────────────────────────────────────────────────────
+
+const SETTINGS_FIELDS = [
+  'visitDays', 'visitFromTime', 'visitToTime',
+  'notifNewLead', 'notifLeadExpiring', 'notifEscrowReleased', 'notifListingUpdate', 'notifWeeklyReport',
+  'leadAutoAccept', 'leadPauseOverloaded', 'leadPreferredLocalities',
+];
+
+async function getSettings(partnerId) {
+  return prisma.user.findUnique({
+    where: { id: partnerId },
+    select: Object.fromEntries(SETTINGS_FIELDS.map((f) => [f, true])),
+  });
+}
+
+async function updateSettings(partnerId, data) {
+  return prisma.user.update({
+    where: { id: partnerId },
+    data,
+    select: Object.fromEntries(SETTINGS_FIELDS.map((f) => [f, true])),
+  });
+}
+
+// ─── BANK ACCOUNT ─────────────────────────────────────────────────────────────
+
+const BANK_FIELDS = ['bankName', 'bankBranch', 'bankAccountNo', 'bankIfsc', 'bankHolderName', 'razorpayRouteAccountId', 'bankLinkedAt'];
+
+async function getBankAccount(partnerId) {
+  return prisma.user.findUnique({
+    where: { id: partnerId },
+    select: Object.fromEntries(BANK_FIELDS.map((f) => [f, true])),
+  });
+}
+
+async function updateBankAccount(partnerId, data) {
+  return prisma.user.update({
+    where: { id: partnerId },
+    data: { ...data, bankLinkedAt: new Date() },
+    select: Object.fromEntries(BANK_FIELDS.map((f) => [f, true])),
+  });
+}
+
+// ─── PARTNER SUPPORT TICKETS ──────────────────────────────────────────────────
+
+async function getSupportTickets(partnerId, filters, skip, limit) {
+  const where = { partnerId };
+  if (filters.status) where.status = filters.status;
+
+  const [data, total] = await Promise.all([
+    prisma.partnerSupportTicket.findMany({
+      where, skip, take: limit,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.partnerSupportTicket.count({ where }),
+  ]);
+  return { data, total };
+}
+
+async function getSupportTicketById(partnerId, ticketId) {
+  const ticket = await prisma.partnerSupportTicket.findFirst({
+    where: { id: ticketId, partnerId },
+  });
+  if (!ticket) throw new ApiError(404, 'Support ticket not found');
+  return ticket;
+}
+
+async function createSupportTicket(partnerId, data) {
+  const count    = await prisma.partnerSupportTicket.count();
+  const ticketNo = `SUP-${String(count + 1).padStart(4, '0')}`;
+  return prisma.partnerSupportTicket.create({
+    data: { partnerId, ticketNo, ...data },
+  });
 }
 
 async function getPartnerAnalytics(partnerId) {
@@ -174,4 +257,11 @@ async function getPartnerAnalytics(partnerId) {
   };
 }
 
-module.exports = { submitKyc, getProfile, updateProfile, getListing, getMyListings, getFinanceSummary, getPartnerAnalytics };
+module.exports = {
+  submitKyc, getProfile, updateProfile, getListing, getMyListings,
+  getFinanceSummary,
+  getSettings, updateSettings,
+  getBankAccount, updateBankAccount,
+  getSupportTickets, getSupportTicketById, createSupportTicket,
+  getPartnerAnalytics,
+};

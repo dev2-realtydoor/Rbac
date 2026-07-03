@@ -152,6 +152,22 @@ async function updateLoanStatus(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function suspendUser(req, res, next) {
+  try {
+    const { suspend, reason } = req.body;
+    if (typeof suspend !== 'boolean') throw new ApiError(400, '"suspend" must be a boolean');
+    const updated = await service.suspendUser(req.params.id, suspend, reason, req.user.id, req.ip);
+    success(res, updated, suspend ? 'User suspended' : 'User unsuspended');
+  } catch (err) { next(err); }
+}
+
+async function getTicket(req, res, next) {
+  try {
+    const ticket = await service.getTicketById(req.params.id);
+    success(res, ticket);
+  } catch (err) { next(err); }
+}
+
 async function getTickets(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
@@ -408,9 +424,9 @@ module.exports = {
   getPendingProperties, approveProperty, rejectProperty, editProperty,
   getPendingKyc, verifyKyc,
   getRevenue, getAuditLogs, getPartnerMetrics,
-  getTickets, updateTicket,
+  getTickets, getTicket, updateTicket,
   getLoans, updateLoanStatus,
-  getUsers, changeUserRole, getUserById,
+  getUsers, changeUserRole, getUserById, suspendUser,
   getPartnerById,
   getPropertyById,
   getKycById,

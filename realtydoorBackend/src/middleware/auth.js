@@ -30,6 +30,7 @@ async function authenticate(req, res, next) {
 
     const dbUser = await prisma.user.findUnique({ where: { clerkId } });
     if (!dbUser) throw new ApiError(401, 'User not registered — call POST /api/auth/sync first');
+    if (dbUser.isSuspended) throw new ApiError(403, 'Your account has been suspended. Contact support@realtydoor.in');
 
     req.user = { ...dbUser, role: payload.role || dbUser.role };
     next();

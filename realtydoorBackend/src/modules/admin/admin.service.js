@@ -411,7 +411,46 @@ async function changeUserRole(targetUserId, newRole, adminId, ip) {
   return updated;
 }
 
+async function suspendUser(targetUserId, suspend, reason, adminId, ip) {
+  if (targetUserId === adminId) throw new ApiError(400, 'Cannot suspend yourself');
+  const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+  if (!user) throw new ApiError(404, 'User not found');
+  if (user.role === 'ADMIN') throw new ApiError(403, 'Cannot suspend an admin account');
+
+  const updated = await prisma.user.update({
+    where: { id: targetUserId },
+    data: {
+      isSuspended:  suspend,
+      suspendedAt:  suspend ? new Date() : null,
+      suspendReason: suspend ? (reason || null) : null,
+    },
+    select: { id: true, name: true, email: true, role: true, isSuspended: true, suspendedAt: true, suspendReason: true },
+  });
+
+  await createAuditLog({
+    adminId, action: suspend ? 'USER_SUSPENDED' : 'USER_UNSUSPENDED',
+    targetType: 'User', targetId: targetUserId,
+    before: { isSuspended: user.isSuspended },
+    after:  { isSuspended: suspend, suspendReason: reason || null },
+    ipAddress: ip,
+  });
+
+  return updated;
+}
+
 // ─── TICKET MANAGEMENT ───────────────────────────────────────────────────────
+
+async function getTicketById(ticketId) {
+  const ticket = await prisma.serviceTicket.findUnique({
+    where: { id: ticketId },
+    include: {
+      user:         { select: { id: true, name: true, email: true, phone: true } },
+      subscription: { include: { service: { select: { name: true, category: true } } } },
+    },
+  });
+  if (!ticket) throw new ApiError(404, 'Ticket not found');
+  return ticket;
+}
 
 async function getAllTickets(filters, skip, limit) {
   const where = {};
@@ -714,9 +753,9 @@ module.exports = {
   getPendingKyc, verifyKyc,
   getRevenueSummary,
   getAuditLogs,
-  getAllTickets, updateTicketStatus,
+  getAllTickets, getTicketById, updateTicketStatus,
   getAllLoans, updateLoanStatus,
-  getAllUsers, changeUserRole,
+  getAllUsers, changeUserRole, suspendUser,
   getPartnerMetrics, getPartnerById,
   adminListServices, adminCreateService, adminUpdateService, adminDeleteService,
   getPropertyByIdAdmin, getKycByUserId, getUserByIdAdmin,

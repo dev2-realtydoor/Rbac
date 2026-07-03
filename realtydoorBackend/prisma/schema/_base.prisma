@@ -140,6 +140,13 @@ enum DisputeStatus {
   CLOSED
 }
 
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
 enum LoanStatus {
   DOCUMENTS_PENDING
   DOCUMENTS_SUBMITTED

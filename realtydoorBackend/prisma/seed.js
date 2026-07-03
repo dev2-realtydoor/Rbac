@@ -41,7 +41,7 @@ async function main() {
   });
   console.log(`✅  Admin    : ${admin.email}  (id: ${admin.id})`);
 
-  // Partner 1 — KYC verified, active listings
+  // Partner 1 — KYC verified, active listings, settings + bank seeded
   const partner = await prisma.user.upsert({
     where:  { email: 'partner@realtydoor.com' },
     update: { clerkId: PARTNER_CLERK_ID },
@@ -54,6 +54,19 @@ async function main() {
       websiteUrl: 'https://realtypro.in',
       kycStatus: 'VERIFIED', kycVerifiedAt: new Date('2024-01-05'),
       kycDocumentUrls: ['https://example.com/kyc/pan.pdf', 'https://example.com/kyc/aadhar.pdf'],
+      // Settings
+      visitDays: ['Mon','Tue','Wed','Thu','Fri','Sat'],
+      visitFromTime: '10:00', visitToTime: '19:00',
+      notifNewLead: true, notifLeadExpiring: true,
+      notifEscrowReleased: true, notifListingUpdate: true, notifWeeklyReport: false,
+      leadAutoAccept: false, leadPauseOverloaded: true,
+      leadPreferredLocalities: ['Baner', 'Kothrud', 'Aundh'],
+      // Bank account
+      bankName: 'HDFC Bank', bankBranch: 'Baner Branch, Pune',
+      bankAccountNo: '50100123456280', bankIfsc: 'HDFC0001234',
+      bankHolderName: 'Rajdeep Kumar',
+      razorpayRouteAccountId: 'acc_seed_partner_001',
+      bankLinkedAt: new Date('2024-01-10'),
     },
   });
   console.log(`✅  Partner1 : ${partner.email}  (id: ${partner.id})`);
@@ -348,6 +361,47 @@ async function main() {
       dropRequestedByPartner: true, dropRequestNote: 'Buyer stopped responding after site visit.',
       dropRequestedAt: daysAgo(14), droppedAt: daysAgo(13), droppedByAdminId: admin.id,
       droppedReason: 'Buyer confirmed not interested via WhatsApp.',
+    },
+    // ── 10 fresh UNASSIGNED leads (admin queue) ───────────────────────────────
+    {
+      buyerName: 'Karan Mehta', buyerEmail: 'karan.mehta@test.com', buyerPhone: '+919600000001',
+      propertyId: propBaner.id, status: 'UNASSIGNED', createdAt: daysAgo(1),
+    },
+    {
+      buyerName: 'Deepa Nair', buyerEmail: 'deepa.nair@test.com', buyerPhone: '+919600000002',
+      propertyId: propKothrud.id, status: 'UNASSIGNED', createdAt: daysAgo(2),
+    },
+    {
+      buyerName: 'Amit Agarwal', buyerEmail: 'amit.agarwal@test.com', buyerPhone: '+919600000003',
+      propertyId: propAundh.id, status: 'UNASSIGNED', createdAt: daysAgo(1),
+    },
+    {
+      buyerName: 'Pooja Reddy', buyerEmail: 'pooja.reddy@test.com', buyerPhone: '+919600000004',
+      propertyId: propBaner.id, status: 'UNASSIGNED', buyerId: user2.id, createdAt: daysAgo(3),
+    },
+    {
+      buyerName: 'Rahul Desai', buyerEmail: 'rahul.desai@test.com', buyerPhone: '+919600000005',
+      propertyId: propOffice.id, status: 'UNASSIGNED', createdAt: daysAgo(4),
+    },
+    {
+      buyerName: 'Neha Kulkarni', buyerEmail: 'neha.kulkarni@test.com', buyerPhone: '+919600000006',
+      propertyId: propAundh.id, status: 'UNASSIGNED', createdAt: daysAgo(2),
+    },
+    {
+      buyerName: 'Sanjay Verma', buyerEmail: 'sanjay.verma@test.com', buyerPhone: '+919600000007',
+      propertyId: propKothrud.id, status: 'UNASSIGNED', createdAt: daysAgo(5),
+    },
+    {
+      buyerName: 'Preethi Iyer', buyerEmail: 'preethi.iyer@test.com', buyerPhone: '+919600000008',
+      propertyId: propBaner.id, status: 'UNASSIGNED', createdAt: daysAgo(6),
+    },
+    {
+      buyerName: 'Mohit Gupta', buyerEmail: 'mohit.gupta@test.com', buyerPhone: '+919600000009',
+      propertyId: propOffice.id, status: 'UNASSIGNED', createdAt: daysAgo(3),
+    },
+    {
+      buyerName: 'Shruti Jain', buyerEmail: 'shruti.jain@test.com', buyerPhone: '+919600000010',
+      propertyId: propUnderConstruction.id, status: 'UNASSIGNED', createdAt: daysAgo(1),
     },
   ];
 
@@ -1072,6 +1126,49 @@ async function main() {
     console.log(`✅  Config   : ${cData.key} [${cData.isPublic ? 'public' : 'private'}]`);
   }
 
+  // ── 24. Partner Support Tickets ───────────────────────────────────────────
+
+  const supportTicketDefs = [
+    {
+      partnerId: partner.id, ticketNo: 'SUP-0001',
+      subject: 'Escrow release delayed for deal D-0038',
+      description: 'The deal was closed 5 days ago but the escrow has not been released yet. Buyer has confirmed the deal. Please investigate and initiate release.',
+      category: 'ESCROW', status: 'OPEN',
+    },
+    {
+      partnerId: partner.id, ticketNo: 'SUP-0002',
+      subject: 'Buyer OTP not received via WhatsApp',
+      description: 'Buyer Suresh Mehta did not receive the site visit OTP on +919000000003. We tried 3 times. Please resend or override.',
+      category: 'LEAD', status: 'RESOLVED',
+      adminReply: 'OTP has been resent. If issue persists contact WATI support. OTP can also be overridden by admin on request.',
+      repliedAt: new Date('2024-06-20'), resolvedAt: new Date('2024-06-20'),
+    },
+    {
+      partnerId: partner.id, ticketNo: 'SUP-0003',
+      subject: 'Listing rejected — needs clarification',
+      description: 'My listing for "2 BHK Flat in Wakad" was rejected but the rejection note says RERA number missing. I have provided RERA P52100099999. Please re-review.',
+      category: 'LISTING', status: 'RESOLVED',
+      adminReply: 'RERA number verified. Listing has been approved and is now live.',
+      repliedAt: new Date('2024-06-12'), resolvedAt: new Date('2024-06-12'),
+    },
+  ];
+
+  const supportTickets = [];
+  for (const stData of supportTicketDefs) {
+    const existing = await prisma.partnerSupportTicket.findFirst({
+      where: { ticketNo: stData.ticketNo },
+    });
+    if (!existing) {
+      const st = await prisma.partnerSupportTicket.create({ data: stData });
+      console.log(`✅  SupTicket: [${stData.status}] ${stData.ticketNo} — ${stData.subject}`);
+      supportTickets.push(st);
+    } else {
+      console.log(`⏭   SupTicket: ${stData.ticketNo}`);
+      supportTickets.push(existing);
+    }
+  }
+  const [supportTicket1] = supportTickets;
+
   // ── Summary ───────────────────────────────────────────────────────────────
 
   console.log('\n──────────────────────────────────────────────────────────────');
@@ -1086,7 +1183,7 @@ async function main() {
   console.log(`  ucPropertyId     = ${propUnderConstruction.id}   ← Wakad (UNDER_CONSTRUCTION)`);
   console.log(`  pendingPropId    = ${propPending.id}   ← Wakad (PENDING_APPROVAL)`);
   console.log(`  rejectedPropId   = ${propRejected.id}   ← Viman Nagar (REJECTED)`);
-  console.log(`  leadId         = ${leadClosed.id}   ← CLOSED lead`);
+  console.log(`  leadId         = ${leadClosed.id}   ← CLOSED lead  (+ 10 UNASSIGNED in admin queue)`);
   console.log(`  escrowId       = ${escrow1.id}   ← RELEASED`);
   console.log(`  escrowHeldId   = ${escrow2.id}   ← HELD`);
   console.log(`  subscriptionId = ${sub.id}`);
@@ -1094,6 +1191,7 @@ async function main() {
   console.log(`  reviewId       = ${review1?.id ?? 'see above'}`);
   console.log(`  disputeId      = ${dispute1?.id ?? 'see above'}`);
   console.log(`  configKey      = support_phone  (use any key from platform config)`);
+  console.log(`  supportTicketId = ${supportTicket1?.id ?? 'see above'}   ← SUP-0001 (OPEN)`);
   console.log('\n  Clerk IDs set (replace before live auth testing):');
   console.log(`    ADMIN_CLERK_ID    = ${ADMIN_CLERK_ID}`);
   console.log(`    PARTNER_CLERK_ID  = ${PARTNER_CLERK_ID}`);

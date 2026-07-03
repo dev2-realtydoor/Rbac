@@ -1723,6 +1723,249 @@ Analytics dashboard for the authenticated partner.
 
 ---
 
+### GET /api/partner/settings
+
+Partner's visit availability, notification preferences, and lead preferences.
+
+**Auth:** PARTNER
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "visitDays": ["Mon","Tue","Wed","Thu","Fri","Sat"],
+    "visitFromTime": "10:00",
+    "visitToTime": "19:00",
+    "notifNewLead": true,
+    "notifLeadExpiring": true,
+    "notifEscrowReleased": true,
+    "notifListingUpdate": true,
+    "notifWeeklyReport": false,
+    "leadAutoAccept": false,
+    "leadPauseOverloaded": true,
+    "leadPreferredLocalities": ["Baner", "Kothrud"]
+  }
+}
+```
+
+---
+
+### PATCH /api/partner/settings
+
+Update any combination of visit availability, notification toggles, or lead preferences.
+
+**Auth:** PARTNER
+
+**Request Body:** All fields optional; at least one required.
+
+```json
+{
+  "visitDays": ["Mon","Tue","Wed","Thu","Fri","Sat"],
+  "visitFromTime": "10:00",
+  "visitToTime": "19:00",
+  "notifNewLead": true,
+  "notifLeadExpiring": true,
+  "notifEscrowReleased": true,
+  "notifListingUpdate": true,
+  "notifWeeklyReport": false,
+  "leadAutoAccept": false,
+  "leadPauseOverloaded": true,
+  "leadPreferredLocalities": ["Baner", "Kothrud"]
+}
+```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `visitDays` | string[] | Valid values: `Mon` `Tue` `Wed` `Thu` `Fri` `Sat` `Sun` |
+| `visitFromTime` | string | `HH:MM` 24-hr format, e.g. `"10:00"` |
+| `visitToTime` | string | `HH:MM` 24-hr format, e.g. `"19:00"` |
+| `notifNewLead` | boolean | WhatsApp + push on lead dispatch |
+| `notifLeadExpiring` | boolean | Alert before 15-min accept window closes |
+| `notifEscrowReleased` | boolean | Alert when admin releases escrow |
+| `notifListingUpdate` | boolean | Alert on listing approve/reject |
+| `notifWeeklyReport` | boolean | Weekly performance email (Monday 9am) |
+| `leadAutoAccept` | boolean | Accept all dispatched leads immediately |
+| `leadPauseOverloaded` | boolean | Stop new leads when >5 active simultaneously |
+| `leadPreferredLocalities` | string[] | Only receive leads for these localities |
+
+**Response `200`:** `{ "success": true, "message": "Settings saved", "data": { ...updated settings } }`
+
+---
+
+### GET /api/partner/bank-account
+
+Partner's linked bank account for escrow payouts.
+
+**Auth:** PARTNER + KYC verified
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "bankName": "HDFC Bank",
+    "bankBranch": "HSR Layout Branch, Bangalore",
+    "bankAccountNo": "XXXX XXXX 6280",
+    "bankIfsc": "HDFC0000634",
+    "bankHolderName": "Ravi Kumar",
+    "razorpayRouteAccountId": "acc_0qK8WnNRouteX",
+    "bankLinkedAt": "2024-01-10T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### PATCH /api/partner/bank-account
+
+Link or update the partner's bank account for escrow payouts.
+
+**Auth:** PARTNER + KYC verified
+
+**Request Body:**
+
+```json
+{
+  "bankName": "HDFC Bank",
+  "bankBranch": "HSR Layout Branch, Bangalore",
+  "bankAccountNo": "50100123456280",
+  "bankIfsc": "HDFC0000634",
+  "bankHolderName": "Ravi Kumar",
+  "razorpayRouteAccountId": "acc_0qK8WnNRouteX"
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `bankName` | Yes | Bank name |
+| `bankAccountNo` | Yes | Full account number (5–20 chars) |
+| `bankIfsc` | Yes | Must match pattern `XXXX0XXXXXX` |
+| `bankHolderName` | Yes | Name as on bank account |
+| `bankBranch` | No | Branch name/address |
+| `razorpayRouteAccountId` | No | Razorpay Route linked account ID |
+
+**Response `200`:** `{ "success": true, "message": "Bank account updated", "data": { ...bank fields } }`
+
+**Errors:** `400` invalid IFSC format.
+
+---
+
+### GET /api/partner/support-tickets
+
+List the authenticated partner's support tickets (paginated).
+
+**Auth:** PARTNER
+
+**Query Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `status` | string | `OPEN` · `IN_PROGRESS` · `RESOLVED` · `CLOSED` |
+| `page` | number | Default: `1` |
+| `limit` | number | Default: `20` |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "data": [
+      {
+        "id": "64tkt...",
+        "ticketNo": "SUP-1042",
+        "subject": "Escrow release delayed for D-0038",
+        "category": "ESCROW",
+        "status": "OPEN",
+        "adminReply": null,
+        "createdAt": "2024-06-27T00:00:00.000Z"
+      }
+    ],
+    "pagination": { "total": 3, "page": 1, "limit": 20, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### POST /api/partner/support-tickets
+
+Raise a new support ticket. Auto-generates a `SUP-XXXX` ticket number.
+
+**Auth:** PARTNER
+
+**Request Body:**
+
+```json
+{
+  "subject": "Escrow release delayed for D-0038",
+  "description": "The deal was closed 5 days ago but the escrow has not been released yet. Please investigate.",
+  "category": "ESCROW"
+}
+```
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| `subject` | Yes | 5–200 characters |
+| `description` | Yes | 10–2000 characters |
+| `category` | No | `LEAD` · `ESCROW` · `LISTING` · `PAYMENT` · `GENERAL` |
+
+**Response `201`:**
+
+```json
+{
+  "success": true,
+  "message": "Support ticket raised",
+  "data": {
+    "id": "64tkt...",
+    "ticketNo": "SUP-1043",
+    "subject": "Escrow release delayed for D-0038",
+    "category": "ESCROW",
+    "status": "OPEN",
+    "createdAt": "2024-07-03T00:00:00.000Z"
+  }
+}
+```
+
+---
+
+### GET /api/partner/support-tickets/:id
+
+Single support ticket detail.
+
+**Auth:** PARTNER (own tickets only)
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64tkt...",
+    "ticketNo": "SUP-1042",
+    "subject": "Escrow release delayed for D-0038",
+    "description": "The deal was closed 5 days ago but the escrow has not been released yet.",
+    "category": "ESCROW",
+    "status": "RESOLVED",
+    "adminReply": "Escrow has been released. Funds will reflect in your account within T+1.",
+    "repliedAt": "2024-06-28T14:00:00.000Z",
+    "resolvedAt": "2024-06-28T14:00:00.000Z",
+    "createdAt": "2024-06-27T00:00:00.000Z"
+  }
+}
+```
+
+**Errors:** `404` ticket not found or does not belong to you.
+
+---
+
 ## 6. Services
 
 ### GET /api/services
@@ -2924,6 +3167,40 @@ All support tickets (paginated).
 
 ---
 
+### GET /api/admin/tickets/:id
+
+Full detail for a single service ticket.
+
+**Auth:** ADMIN
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "id": "64tick...",
+    "subject": "Leaking kitchen tap",
+    "description": "Kitchen tap has been dripping for 2 days.",
+    "category": "PLUMBING",
+    "status": "RESOLVED",
+    "priority": "HIGH",
+    "adminNotes": "Vendor dispatched on 2024-01-15.",
+    "vendorName": "Quick Fix Plumbers",
+    "vendorPhone": "+919800100200",
+    "resolvedAt": "2024-01-15T00:00:00.000Z",
+    "createdAt": "2024-01-13T00:00:00.000Z",
+    "user": { "id": "64user...", "name": "Suresh Mehta", "email": "suresh@example.com", "phone": "+919000000003" },
+    "subscription": { "service": { "name": "Maintenance Premium", "category": "MAINTENANCE" } }
+  }
+}
+```
+
+**Errors:** `404` ticket not found.
+
+---
+
 ### PATCH /api/admin/tickets/:id
 
 Update ticket status. Enforces transition machine: `OPEN → IN_PROGRESS → RESOLVED`.
@@ -3122,6 +3399,45 @@ Full user profile by ID.
 ```
 
 **Errors:** `404` user not found.
+
+---
+
+### PATCH /api/admin/users/:id/suspend
+
+Suspend or unsuspend a user. Suspended users receive `403` on every authenticated request. Cannot suspend ADMINs or yourself.
+
+**Auth:** ADMIN
+
+**Request Body:**
+
+```json
+{ "suspend": true, "reason": "Spamming property listings" }
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `suspend` | boolean | Yes | `true` = suspend · `false` = unsuspend |
+| `reason` | string | No | Stored on the user record; shown in audit log |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "User suspended",
+  "data": {
+    "id": "64user...",
+    "name": "Suresh Mehta",
+    "email": "suresh@example.com",
+    "role": "USER",
+    "isSuspended": true,
+    "suspendedAt": "2024-03-10T10:00:00.000Z",
+    "suspendReason": "Spamming property listings"
+  }
+}
+```
+
+**Errors:** `400` missing `suspend` field · `400` cannot suspend yourself · `403` cannot suspend an admin · `404` user not found.
 
 ---
 

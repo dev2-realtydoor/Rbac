@@ -7,7 +7,7 @@ model User {
   clerkId       String          @unique
   name          String
   email         String          @unique
-  phone               String?   @unique
+  phone               String?
   phoneVerifiedAt     DateTime?
   phoneVerified       Boolean   @default(false)
   phoneOtp            String?
@@ -35,6 +35,37 @@ model User {
   kycRejectionNote String?
   kycVerifiedAt    DateTime?
 
+  // Suspension (admin-managed)
+  isSuspended   Boolean   @default(false)
+  suspendedAt   DateTime?
+  suspendReason String?
+
+  // Partner — visit availability
+  visitDays               String[]   // e.g. ['Mon','Tue','Wed','Thu','Fri','Sat']
+  visitFromTime           String?    // e.g. '10:00'
+  visitToTime             String?    // e.g. '19:00'
+
+  // Partner — notification preferences
+  notifNewLead            Boolean    @default(true)
+  notifLeadExpiring       Boolean    @default(true)
+  notifEscrowReleased     Boolean    @default(true)
+  notifListingUpdate      Boolean    @default(true)
+  notifWeeklyReport       Boolean    @default(false)
+
+  // Partner — lead preferences
+  leadAutoAccept          Boolean    @default(false)
+  leadPauseOverloaded     Boolean    @default(true)
+  leadPreferredLocalities String[]
+
+  // Partner — bank account (for escrow payouts)
+  bankName                String?
+  bankBranch              String?
+  bankAccountNo           String?
+  bankIfsc                String?
+  bankHolderName          String?
+  razorpayRouteAccountId  String?
+  bankLinkedAt            DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -53,4 +84,7 @@ model User {
   loanApplications  LoanApplication[]
   disputes          Dispute[]
   reviews           PropertyReview[]
+  supportTickets    PartnerSupportTicket[]
+
+  @@index([phone])
 }

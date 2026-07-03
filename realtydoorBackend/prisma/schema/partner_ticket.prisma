@@ -1,0 +1,23 @@
+// ─── PARTNER SUPPORT TICKETS ──────────────────────────────────────────────────
+// Raised by partners via the Help & Support page.
+// Separate from ServiceTicket (which is for user home-maintenance subscriptions).
+
+model PartnerSupportTicket {
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
+  partnerId   String              @db.ObjectId
+  partner     User                @relation(fields: [partnerId], references: [id])
+  ticketNo    String              @unique   // SUP-0001 format
+  subject     String
+  description String
+  category    String?             // LEAD | ESCROW | LISTING | PAYMENT | GENERAL
+  status      SupportTicketStatus @default(OPEN)
+  adminReply  String?
+  repliedAt   DateTime?
+  resolvedAt  DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([partnerId, status])
+}
