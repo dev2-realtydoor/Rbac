@@ -44,7 +44,20 @@ async function main() {
   // Partner 1 — KYC verified, active listings, settings + bank seeded
   const partner = await prisma.user.upsert({
     where:  { email: 'partner@realtydoor.com' },
-    update: { clerkId: PARTNER_CLERK_ID },
+    update: {
+      clerkId: PARTNER_CLERK_ID,
+      visitDays: ['Mon','Tue','Wed','Thu','Fri','Sat'],
+      visitFromTime: '10:00', visitToTime: '19:00',
+      notifNewLead: true, notifLeadExpiring: true,
+      notifEscrowReleased: true, notifListingUpdate: true, notifWeeklyReport: false,
+      leadAutoAccept: false, leadPauseOverloaded: true,
+      leadPreferredLocalities: ['Baner', 'Kothrud', 'Aundh'],
+      bankName: 'HDFC Bank', bankBranch: 'Baner Branch, Pune',
+      bankAccountNo: '50100123456280', bankIfsc: 'HDFC0001234',
+      bankHolderName: 'Rajdeep Kumar',
+      razorpayRouteAccountId: 'acc_seed_partner_001',
+      bankLinkedAt: new Date('2024-01-10'),
+    },
     create: {
       clerkId: PARTNER_CLERK_ID, name: 'Rajdeep Kumar',
       email: 'partner@realtydoor.com', phone: '+919000000002',
