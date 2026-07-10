@@ -38,38 +38,33 @@ async function syncUser(req, res, next) {
     }
     const resolvedRole = clerkRole || existing?.role || 'USER';
 
-    // phone is @unique — skip the update if another account already holds the number.
-    let phoneToWrite = phone || undefined;
-    if (phoneToWrite && existing?.phone !== phoneToWrite) {
-      const phoneTaken = await prisma.user.findFirst({
-        where: { phone: phoneToWrite, NOT: { clerkId: existing?.clerkId ?? clerkId } },
-        select: { id: true },
-      });
-      if (phoneTaken) phoneToWrite = undefined;
-    }
+    const phoneToWrite = phone || undefined;
+    const writeData = {
+      clerkId,
+      name,
+      email,
+      ...(phoneToWrite !== undefined && { phone: phoneToWrite }),
+      profileImageUrl,
+      role: resolvedRole,
+    };
 
-    const user = existing
-      ? await prisma.user.update({
-          where: { id: existing.id },
-          data: {
-            clerkId,           // stamp/correct the clerkId in case it came from email fallback
-            name,
-            email,
-            ...(phoneToWrite !== undefined && { phone: phoneToWrite }),
-            profileImageUrl,
-            role: resolvedRole,
-          },
-        })
-      : await prisma.user.create({
-          data: {
-            clerkId,
-            name,
-            email,
-            ...(phoneToWrite ? { phone: phoneToWrite } : {}),
-            profileImageUrl,
-            role: resolvedRole,
-          },
+    let user;
+    try {
+      user = existing
+        ? await prisma.user.update({ where: { id: existing.id }, data: writeData })
+        : await prisma.user.create({ data: writeData });
+    } catch (err) {
+      // Concurrent request already inserted this user — find and update instead
+      if (err.code === 'P2002') {
+        const found = await prisma.user.findFirst({
+          where: { OR: [{ clerkId }, { email }] },
         });
+        if (!found) throw err;
+        user = await prisma.user.update({ where: { id: found.id }, data: writeData });
+      } else {
+        throw err;
+      }
+    }
 
     // If publicMetadata was missing a role, stamp it now so future JWTs include it
     if (!clerkRole) {
