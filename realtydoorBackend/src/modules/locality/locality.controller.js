@@ -13,6 +13,15 @@ async function getLocality(req, res, next) {
   } catch (err) { next(err); }
 }
 
+async function getLocalityPage(req, res, next) {
+  try {
+    const { city, locality } = req.query;
+    if (!city || !locality) throw new ApiError(400, 'city and locality query params are required');
+    const page = await service.getLocalityPage(city, locality);
+    success(res, page);
+  } catch (err) { next(err); }
+}
+
 async function listLocalities(req, res, next) {
   try {
     const { page, limit, skip } = parsePagination(req.query);
@@ -51,4 +60,4 @@ async function getCitiesSummary(req, res, next) {
   } catch (err) { next(err); }
 }
 
-module.exports = { getLocality, listLocalities, getLocalityById, upsertLocality, deleteLocality, getCitiesSummary };
+module.exports = { getLocality, getLocalityPage, listLocalities, getLocalityById, upsertLocality, deleteLocality, getCitiesSummary };

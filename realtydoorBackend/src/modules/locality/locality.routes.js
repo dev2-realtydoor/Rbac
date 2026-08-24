@@ -5,6 +5,8 @@ const { requireAdmin } = require('../../middleware/requireRole');
 
 // Public — property detail page fetches this (requires ?city=&locality=)
 router.get('/insight',        ctrl.getLocality);
+// Public — locality market-intelligence landing page (requires ?city=&locality=)
+router.get('/page',           ctrl.getLocalityPage);
 // Public — homepage city cards aggregate
 router.get('/cities-summary', ctrl.getCitiesSummary);
 
