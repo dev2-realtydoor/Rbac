@@ -107,7 +107,7 @@ async function getFavorites(userId) {
           id: true, title: true, slug: true, price: true, monthlyRent: true,
           propertyType: true, listingType: true, bhk: true, locality: true,
           city: true, images: true, coverImageIndex: true, isVerified: true,
-          publishStatus: true,
+          publishStatus: true, facing: true, furnishing: true,
         },
       },
     },

@@ -242,7 +242,9 @@ Search published, non-B2B properties.
         "isVerified": true,
         "isFeatured": false,
         "reraNumber": "P52100012345",
-        "createdAt": "2024-01-10T00:00:00.000Z"
+        "createdAt": "2024-01-10T00:00:00.000Z",
+        "facing": "East",
+        "furnishing": "Semi-Furnished"
       }
     ],
     "pagination": {
@@ -285,7 +287,9 @@ Returns up to 12 featured approved listings.
       "city": "Pune",
       "images": ["https://cdn.realtydoor.in/villa1.jpg"],
       "coverImageIndex": 0,
-      "isVerified": true
+      "isVerified": true,
+      "facing": "North",
+      "furnishing": "Fully Furnished"
     }
   ]
 }
@@ -404,6 +408,8 @@ Create a new property listing (submitted for admin review).
 ```
 
 Fields `publishStatus`, `isVerified`, `partnerId` are silently stripped.
+
+`furnishing` and `facing` are optional — if omitted, they default to `"Unfurnished"` and `"East"` respectively.
 
 **Response `201`:**
 
@@ -1028,7 +1034,9 @@ All properties the user has saved.
         "slug": "3-bhk-flat-in-baner-...",
         "city": "Pune",
         "price": 8500000,
-        "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"],
+        "facing": "East",
+        "furnishing": "Semi-Furnished"
       }
     }
   ]
@@ -1643,7 +1651,9 @@ Partner's own property listings.
       "price": 8500000,
       "bhk": 3,
       "images": ["https://cdn.realtydoor.in/prop1.jpg"],
-      "createdAt": "2024-01-10T00:00:00.000Z"
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "facing": "East",
+      "furnishing": "Semi-Furnished"
     }
   ]
 }
