@@ -1,5 +1,7 @@
 const prisma = require('../../lib/prisma');
 const ApiError = require('../../utils/ApiError');
+const { withCache, cacheDel } = require('../../lib/cache');
+const CACHE_KEYS = require('../../lib/cacheKeys');
 
 async function getLocality(city, locality) {
   const insight = await prisma.localityInsight.findFirst({
@@ -15,11 +17,13 @@ async function getLocality(city, locality) {
 async function upsertLocality(data, adminId) {
   const { city, locality, dataAsOfDate, ...rest } = data;
   const resolvedDataAsOfDate = dataAsOfDate ? new Date(dataAsOfDate) : new Date();
-  return prisma.localityInsight.upsert({
+  const saved = await prisma.localityInsight.upsert({
     where:  { city_locality: { city, locality } },
     update: { ...rest, dataAsOfDate: resolvedDataAsOfDate, updatedByAdminId: adminId },
     create: { city, locality, ...rest, dataAsOfDate: resolvedDataAsOfDate, updatedByAdminId: adminId },
   });
+  cacheDel(CACHE_KEYS.CITIES_SUMMARY, CACHE_KEYS.localityPage(city, locality));
+  return saved;
 }
 
 async function listLocalities({ city } = {}, skip = 0, limit = 20) {
@@ -42,7 +46,9 @@ async function getLocalityById(id) {
 async function deleteLocality(id) {
   const insight = await prisma.localityInsight.findUnique({ where: { id } });
   if (!insight) throw new ApiError(404, 'Locality insight not found');
-  return prisma.localityInsight.delete({ where: { id } });
+  const deleted = await prisma.localityInsight.delete({ where: { id } });
+  cacheDel(CACHE_KEYS.CITIES_SUMMARY, CACHE_KEYS.localityPage(insight.city, insight.locality));
+  return deleted;
 }
 
 function pickBadge(property) {
@@ -53,6 +59,10 @@ function pickBadge(property) {
 }
 
 async function getLocalityPage(city, locality) {
+  return withCache(CACHE_KEYS.localityPage(city, locality), 900, () => buildLocalityPage(city, locality));
+}
+
+async function buildLocalityPage(city, locality) {
   const insight = await prisma.localityInsight.findFirst({
     where: {
       city:     { equals: city,     mode: 'insensitive' },
@@ -124,6 +134,10 @@ async function getLocalityPage(city, locality) {
 }
 
 async function getCitiesSummary() {
+  return withCache(CACHE_KEYS.CITIES_SUMMARY, 900, buildCitiesSummary);
+}
+
+async function buildCitiesSummary() {
   const [localities, properties] = await Promise.all([
     prisma.localityInsight.findMany({
       select: { city: true, avgPricePerSqftPaise: true, priceChangeLastMonthPct: true },

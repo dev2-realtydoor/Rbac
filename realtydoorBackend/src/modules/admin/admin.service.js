@@ -11,6 +11,8 @@ const {
 const { sendLeadAssignedNotice } = require('../../lib/wati');
 const { setUserRole } = require('../../lib/clerkAdmin');
 const logger = require('../../lib/logger');
+const { cacheDel } = require('../../lib/cache');
+const CACHE_KEYS = require('../../lib/cacheKeys');
 
 // ─── LEAD MANAGEMENT ─────────────────────────────────────────────────────────
 
@@ -141,6 +143,8 @@ async function approveProperty(propertyId, adminId, ip) {
   });
 
   sendPropertyApproved(property.partner.email, property.title).catch(() => {});
+  cacheDel(CACHE_KEYS.FEATURED_PROPERTIES, CACHE_KEYS.CITIES_SUMMARY);
+  cacheDel(CACHE_KEYS.localityPage(property.city, property.locality));
   return updated;
 }
 
@@ -171,6 +175,8 @@ async function rejectProperty(propertyId, note, adminId, ip) {
   });
 
   sendPropertyRejected(property.partner.email, property.title, note).catch(() => {});
+  cacheDel(CACHE_KEYS.FEATURED_PROPERTIES, CACHE_KEYS.CITIES_SUMMARY);
+  cacheDel(CACHE_KEYS.localityPage(property.city, property.locality));
   return updated;
 }
 
@@ -306,6 +312,14 @@ async function editProperty(propertyId, data, adminId, adminName, ip) {
       after:  Object.fromEntries(editLogRows.map((r) => [r.fieldChanged, r.newValue])),
       ipAddress: ip,
     });
+  }
+
+  if (property.publishStatus === 'APPROVED' || updated.publishStatus === 'APPROVED') {
+    cacheDel(CACHE_KEYS.FEATURED_PROPERTIES, CACHE_KEYS.CITIES_SUMMARY);
+    cacheDel(CACHE_KEYS.localityPage(property.city, property.locality));
+    if (updated.city !== property.city || updated.locality !== property.locality) {
+      cacheDel(CACHE_KEYS.localityPage(updated.city, updated.locality));
+    }
   }
 
   return updated;
@@ -574,20 +588,26 @@ async function adminListServices() {
 }
 
 async function adminCreateService(data) {
-  return prisma.service.create({ data });
+  const svc = await prisma.service.create({ data });
+  cacheDel(CACHE_KEYS.SERVICES_LIST);
+  return svc;
 }
 
 async function adminUpdateService(id, data) {
   const svc = await prisma.service.findUnique({ where: { id } });
   if (!svc) throw new ApiError(404, 'Service not found');
-  return prisma.service.update({ where: { id }, data });
+  const updated = await prisma.service.update({ where: { id }, data });
+  cacheDel(CACHE_KEYS.SERVICES_LIST);
+  return updated;
 }
 
 async function adminDeleteService(id) {
   const svc = await prisma.service.findUnique({ where: { id } });
   if (!svc) throw new ApiError(404, 'Service not found');
   // Soft-delete — keeps existing subscriptions resolvable
-  return prisma.service.update({ where: { id }, data: { isActive: false } });
+  const deactivated = await prisma.service.update({ where: { id }, data: { isActive: false } });
+  cacheDel(CACHE_KEYS.SERVICES_LIST);
+  return deactivated;
 }
 
 // ─── PARTNER METRICS ─────────────────────────────────────────────────────────

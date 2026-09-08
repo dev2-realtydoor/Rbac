@@ -1,6 +1,8 @@
 const prisma = require('../../lib/prisma');
 const ApiError = require('../../utils/ApiError');
 const { paginate } = require('../../utils/pagination');
+const { withCache, cacheDel } = require('../../lib/cache');
+const CACHE_KEYS = require('../../lib/cacheKeys');
 
 const SORT_MAP = {
   price_asc: { price: 'asc' },
@@ -114,11 +116,21 @@ async function updateProperty(id, partnerId, data) {
     data.rejectionNote = null;
   }
 
-  return prisma.property.update({ where: { id }, data });
+  const updated = await prisma.property.update({ where: { id }, data });
+
+  if (property.publishStatus === 'APPROVED') {
+    cacheDel(CACHE_KEYS.FEATURED_PROPERTIES, CACHE_KEYS.CITIES_SUMMARY);
+    cacheDel(CACHE_KEYS.localityPage(property.city, property.locality));
+    if (updated.city !== property.city || updated.locality !== property.locality) {
+      cacheDel(CACHE_KEYS.localityPage(updated.city, updated.locality));
+    }
+  }
+
+  return updated;
 }
 
 async function getFeaturedProperties() {
-  return prisma.property.findMany({
+  return withCache(CACHE_KEYS.FEATURED_PROPERTIES, 600, () => prisma.property.findMany({
     where: { publishStatus: 'APPROVED', isFeatured: true },
     take: 12,
     orderBy: { createdAt: 'desc' },
@@ -127,7 +139,7 @@ async function getFeaturedProperties() {
       propertyType: true, listingType: true, bhk: true, locality: true, city: true,
       images: true, coverImageIndex: true, isVerified: true, facing: true, furnishing: true,
     },
-  });
+  }));
 }
 
 async function addImages(id, partnerId, urls) {

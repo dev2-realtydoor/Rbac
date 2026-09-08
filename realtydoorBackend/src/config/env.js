@@ -20,6 +20,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1),
   EMAIL_FROM: z.string().email(),
   FRONTEND_URL: z.string().url(),
+  REDIS_URL: z.string().optional(),
   OTP_EXPIRY_MINUTES: z.string().default('120'),
   OTP_MAX_ATTEMPTS: z.string().default('3'),
 });
