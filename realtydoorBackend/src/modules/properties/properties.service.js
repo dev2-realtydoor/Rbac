@@ -68,7 +68,7 @@ async function searchProperties(query, skip, limit, page) {
         propertyType: true, listingType: true, propertyStatus: true,
         bhk: true, carpetArea: true, locality: true, city: true,
         images: true, coverImageIndex: true, isVerified: true, isFeatured: true,
-        reraNumber: true, createdAt: true,
+        reraNumber: true, createdAt: true, facing: true, furnishing: true,
       },
     }),
     prisma.property.count({ where }),
@@ -91,6 +91,9 @@ async function createProperty(data, partnerId) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '') + '-' + Date.now();
+
+  if (!data.facing) data.facing = 'East';
+  if (!data.furnishing) data.furnishing = 'Unfurnished';
 
   return prisma.property.create({
     data: { ...data, slug, partnerId, publishStatus: 'PENDING_APPROVAL' },
@@ -122,7 +125,7 @@ async function getFeaturedProperties() {
     select: {
       id: true, title: true, slug: true, price: true, monthlyRent: true,
       propertyType: true, listingType: true, bhk: true, locality: true, city: true,
-      images: true, coverImageIndex: true, isVerified: true,
+      images: true, coverImageIndex: true, isVerified: true, facing: true, furnishing: true,
     },
   });
 }

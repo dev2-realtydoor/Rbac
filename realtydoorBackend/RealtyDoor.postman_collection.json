@@ -6727,6 +6727,68 @@
           ]
         },
         {
+          "name": "Get Locality Page (Market Intelligence)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/locality-insights/page?city=Pune&locality=Baner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "locality-insights",
+                "page"
+              ],
+              "query": [
+                {
+                  "key": "city",
+                  "value": "Pune"
+                },
+                {
+                  "key": "locality",
+                  "value": "Baner"
+                }
+              ]
+            },
+            "description": "Full locality landing-page payload — merges the admin-curated LocalityInsight record with live stats (inventoryLive, topVerifiedPicks) computed at request time from the Property collection. Requires a curated LocalityInsight row to already exist for this city+locality (create one via 'Upsert Locality Insight (Admin)' first) — otherwise 404s."
+          },
+          "response": [
+            {
+              "name": "200 – Locality Page",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"success\":true,\"data\":{\"city\":\"Bengaluru\",\"locality\":\"Whitefield\",\"subtitle\":\"India's most dynamic IT corridor\",\"snapshot\":{\"localityScore\":8.6,\"marketStage\":\"Mature Growth\",\"rentalDemand\":\"High\",\"infrastructureStrength\":\"Strong\",\"bestFor\":[\"IT Professionals\",\"Families\",\"Investors\",\"Rental Income\"]},\"stats\":{\"avgPricePerSqftPaise\":549000,\"minPricePerSqftPaise\":480000,\"maxPricePerSqftPaise\":620000,\"priceChangeLastMonthPct\":8.4,\"medianPricePaise\":1080000000,\"medianPricePropertyType\":\"3BHK\",\"avgRentYieldPct\":3.2,\"inventoryLive\":{\"total\":542,\"addedThisWeek\":38}},\"priceTrends\":{\"historical\":[{\"period\":\"Aug 2023\",\"price\":4100},{\"period\":\"Aug 2026\",\"price\":5490}],\"growth\":{\"oneYear\":8.4,\"threeYear\":17.2,\"fiveYear\":31.8}},\"propertyMix\":[{\"type\":\"3BHK\",\"percentage\":42,\"count\":228}],\"microMarkets\":[{\"name\":\"ITPL\",\"avgPricePerSqft\":6200,\"rentalDemand\":\"Very High\"}],\"keyInfrastructure\":[{\"name\":\"ITPL\",\"category\":\"Tech Park\",\"distance\":\"5 min drive\"}],\"connectivity\":{\"metro\":[{\"name\":\"Whitefield Metro Station\",\"line\":\"Purple Line\",\"status\":\"Operational\"}],\"airports\":[{\"name\":\"Kempegowda International Airport\",\"code\":\"BLR\",\"distance\":\"42 km\"}],\"majorRoads\":[\"Whitefield Main Road\"],\"travelTimes\":[{\"destination\":\"ITPL\",\"time\":\"15 min\"}]},\"infrastructureProjects\":[{\"name\":\"Whitefield Metro Phase 2\",\"category\":\"Metro\",\"status\":\"Operational\",\"year\":2026,\"impact\":\"High\"}],\"prosAndCons\":{\"pros\":[\"Strong IT employment base\"],\"cons\":[\"Peak-hour traffic\"]},\"investmentScore\":{\"overall\":8.4,\"factors\":{\"priceGrowth\":8.8,\"rentalDemand\":9.1}},\"buyVsRent\":{\"buyerDemandPct\":76,\"sellerDemandPct\":24,\"avgRentByBhk\":{\"2BHK\":32000,\"3BHK\":48000},\"rentalYieldPct\":3.2},\"faqs\":[{\"question\":\"Is Whitefield good for investment?\",\"answer\":\"Yes.\"}],\"topVerifiedPicks\":[{\"badge\":\"NEW\",\"bedroomConfig\":\"3BHK\",\"project\":\"Prestige Falcon City\",\"locality\":\"Whitefield\",\"price\":12800000,\"area\":1800,\"areaUnit\":\"sqft\",\"facing\":\"East\",\"floorNumber\":4,\"totalFloors\":12,\"slug\":\"prestige-falcon-city-...\"}],\"dataAsOfDate\":\"2026-08-24T00:00:00.000Z\",\"updatedAt\":\"2026-08-24T00:00:00.000Z\"}}"
+            },
+            {
+              "name": "404 – Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\"success\":false,\"message\":\"No locality data found\"}"
+            }
+          ]
+        },
+        {
           "name": "Cities Summary (Public)",
           "request": {
             "auth": {
@@ -6807,7 +6869,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqft\":8500,\"trending\":false,\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}],\"pagination\":{\"total\":12,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
+              "body": "{\"success\":true,\"data\":{\"data\":[{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqftPaise\":850000,\"priceChangeLastMonthPct\":2.3,\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}],\"pagination\":{\"total\":12,\"page\":1,\"limit\":20,\"totalPages\":1,\"hasNext\":false,\"hasPrev\":false}}}"
             }
           ]
         },
@@ -6841,7 +6903,7 @@
                 }
               ],
               "cookie": [],
-              "body": "{\"success\":true,\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqft\":8500,\"appreciation\":2.3,\"connectivity\":\"Well connected via NH-48 and Baner-Balewadi road\",\"amenities\":\"D-Mart, Orchid School, Baner Metro Station, Aditya Birla Hospital\",\"overview\":\"Baner is a rapidly developing IT suburb with excellent social infrastructure.\",\"trending\":true,\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}}"
+              "body": "{\"success\":true,\"data\":{\"id\":\"66aaabbbccc111ddd222eee3\",\"city\":\"Pune\",\"locality\":\"Baner\",\"avgPricePerSqftPaise\":850000,\"priceChangeLastMonthPct\":2.3,\"nearbyInfra\":[\"D-Mart\",\"Orchid School\",\"Baner Metro Station\",\"Aditya Birla Hospital\"],\"subtitle\":\"Baner is a rapidly developing IT suburb with excellent social infrastructure.\",\"updatedAt\":\"2026-05-01T06:00:00.000Z\"}}"
             },
             {
               "name": "404 – Not Found",
@@ -6871,7 +6933,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"city\": \"Pune\",\n  \"locality\": \"Baner\",\n  \"citySlug\": \"pune\",\n  \"localitySlug\": \"baner\",\n  \"avgPricePerSqftPaise\": 850000,\n  \"minPricePerSqftPaise\": 700000,\n  \"maxPricePerSqftPaise\": 1050000,\n  \"avgRentPerMonthPaise\": 2800000,\n  \"priceChangeLastMonthPct\": 2.3,\n  \"nearbyInfra\": [\"D-Mart\", \"Orchid School\", \"Baner Metro Station\", \"Aditya Birla Hospital\"],\n  \"dataAsOfDate\": \"2024-01-01T00:00:00.000Z\"\n}",
+              "raw": "{\n  \"city\": \"Pune\",\n  \"locality\": \"Baner\",\n  \"citySlug\": \"pune\",\n  \"localitySlug\": \"baner\",\n  \"avgPricePerSqftPaise\": 850000,\n  \"minPricePerSqftPaise\": 700000,\n  \"maxPricePerSqftPaise\": 1050000,\n  \"avgRentPerMonthPaise\": 2800000,\n  \"priceChangeLastMonthPct\": 2.3,\n  \"nearbyInfra\": [\"D-Mart\", \"Orchid School\", \"Baner Metro Station\", \"Aditya Birla Hospital\"],\n  \"dataAsOfDate\": \"2024-01-01T00:00:00.000Z\",\n\n  \"subtitle\": \"Baner is a rapidly developing IT suburb with excellent social infrastructure.\",\n  \"localityScore\": 8.1,\n  \"marketStage\": \"Mature Growth\",\n  \"rentalDemand\": \"High\",\n  \"infrastructureStrength\": \"Strong\",\n  \"bestFor\": [\"IT Professionals\", \"Families\", \"Investors\"],\n  \"medianPricePaise\": 1080000000,\n  \"medianPricePropertyType\": \"3BHK\",\n  \"avgRentYieldPct\": 3.2,\n  \"priceTrends\": {\n    \"historical\": [\n      { \"period\": \"Aug 2025\", \"price\": 8100 },\n      { \"period\": \"Aug 2026\", \"price\": 8500 }\n    ],\n    \"growth\": { \"oneYear\": 4.9 }\n  },\n  \"propertyMix\": [\n    { \"type\": \"2BHK\", \"percentage\": 38, \"count\": 206 },\n    { \"type\": \"3BHK\", \"percentage\": 42, \"count\": 228 }\n  ],\n  \"microMarkets\": [\n    { \"name\": \"Baner Road\", \"avgPricePerSqft\": 9000, \"rentalDemand\": \"High\" }\n  ],\n  \"keyInfrastructure\": [\n    { \"name\": \"Baner Metro Station\", \"category\": \"Metro\", \"distance\": \"5 min drive\" }\n  ],\n  \"connectivity\": {\n    \"metro\": [{ \"name\": \"Baner Metro Station\", \"line\": \"Purple Line\", \"status\": \"Operational\" }],\n    \"majorRoads\": [\"NH-48\", \"Baner-Balewadi Road\"]\n  },\n  \"infrastructureProjects\": [\n    { \"name\": \"Baner-Balewadi Elevated Corridor\", \"status\": \"Under Construction\", \"year\": 2027, \"impact\": \"High\" }\n  ],\n  \"prosAndCons\": {\n    \"pros\": [\"Strong IT employment base\", \"Metro connectivity\"],\n    \"cons\": [\"Peak-hour traffic\"]\n  },\n  \"investmentScore\": {\n    \"overall\": 8.1,\n    \"factors\": { \"priceGrowth\": 7.8, \"rentalDemand\": 8.6, \"connectivity\": 8.4 }\n  },\n  \"buyVsRent\": {\n    \"buyerDemandPct\": 68,\n    \"sellerDemandPct\": 32,\n    \"avgRentByBhk\": { \"2BHK\": 28000, \"3BHK\": 42000 },\n    \"rentalYieldPct\": 3.2\n  },\n  \"faqs\": [\n    { \"question\": \"Is Baner good for investment?\", \"answer\": \"Yes — strong IT employment base and improving connectivity.\" }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"

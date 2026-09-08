@@ -242,7 +242,9 @@ Search published, non-B2B properties.
         "isVerified": true,
         "isFeatured": false,
         "reraNumber": "P52100012345",
-        "createdAt": "2024-01-10T00:00:00.000Z"
+        "createdAt": "2024-01-10T00:00:00.000Z",
+        "facing": "East",
+        "furnishing": "Semi-Furnished"
       }
     ],
     "pagination": {
@@ -285,7 +287,9 @@ Returns up to 12 featured approved listings.
       "city": "Pune",
       "images": ["https://cdn.realtydoor.in/villa1.jpg"],
       "coverImageIndex": 0,
-      "isVerified": true
+      "isVerified": true,
+      "facing": "North",
+      "furnishing": "Fully Furnished"
     }
   ]
 }
@@ -404,6 +408,8 @@ Create a new property listing (submitted for admin review).
 ```
 
 Fields `publishStatus`, `isVerified`, `partnerId` are silently stripped.
+
+`furnishing` and `facing` are optional — if omitted, they default to `"Unfurnished"` and `"East"` respectively.
 
 **Response `201`:**
 
@@ -1028,7 +1034,9 @@ All properties the user has saved.
         "slug": "3-bhk-flat-in-baner-...",
         "city": "Pune",
         "price": 8500000,
-        "images": ["https://cdn.realtydoor.in/prop1.jpg"]
+        "images": ["https://cdn.realtydoor.in/prop1.jpg"],
+        "facing": "East",
+        "furnishing": "Semi-Furnished"
       }
     }
   ]
@@ -1643,7 +1651,9 @@ Partner's own property listings.
       "price": 8500000,
       "bhk": 3,
       "images": ["https://cdn.realtydoor.in/prop1.jpg"],
-      "createdAt": "2024-01-10T00:00:00.000Z"
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "facing": "East",
+      "furnishing": "Semi-Furnished"
     }
   ]
 }
@@ -2327,7 +2337,7 @@ Submit a contact form (authenticated or public).
 
 ### GET /api/locality-insights/insight
 
-Public point-lookup for a city + locality pair. Both params are required.
+Public point-lookup for a city + locality pair. Both params are required. Returns the full `LocalityInsight` record (core price panel + all locality market-intelligence fields, if curated) — used by the property-detail "Locality Insights" panel.
 
 **Auth:** Public
 
@@ -2348,18 +2358,102 @@ Public point-lookup for a city + locality pair. Both params are required.
     "id": "64loc...",
     "city": "Pune",
     "locality": "Baner",
-    "avgPricePerSqft": 25000,
-    "appreciation": 8.5,
-    "connectivity": "Metro, Highway",
-    "amenities": "Schools, Hospitals, Malls",
-    "overview": "Prime residential locality...",
-    "trending": true,
+    "avgPricePerSqftPaise": 2500000,
+    "minPricePerSqftPaise": 2200000,
+    "maxPricePerSqftPaise": 2800000,
+    "avgRentPerMonthPaise": null,
+    "priceChangeLastMonthPct": 8.5,
+    "nearbyInfra": ["Metro", "Highway"],
+    "subtitle": "Prime residential locality...",
+    "dataAsOfDate": "2024-01-15T00:00:00.000Z",
     "updatedAt": "2024-01-15T00:00:00.000Z"
   }
 }
 ```
 
+Money fields are in **paise** (₹1 = 100 paise). `dataAsOfDate`/`updatedAt` reflect the last admin refresh (monthly cadence).
+
 **Errors:** `400` if either query param is missing · `404` no data for that city+locality.
+
+---
+
+### GET /api/locality-insights/page
+
+Public — full locality market-intelligence landing page. Merges the admin-curated `LocalityInsight` record with **live** stats computed at request time from the `Property` collection (`inventoryLive`, `topVerifiedPicks`) — never stored, always fresh.
+
+**Auth:** Public
+
+**Query Parameters:** same as `/insight` — `city`, `locality` (both required).
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Success",
+  "data": {
+    "city": "Bengaluru",
+    "locality": "Whitefield",
+    "subtitle": "India's most dynamic IT corridor",
+    "snapshot": {
+      "localityScore": 8.6,
+      "marketStage": "Mature Growth",
+      "rentalDemand": "High",
+      "infrastructureStrength": "Strong",
+      "bestFor": ["IT Professionals", "Families", "Investors", "Rental Income"]
+    },
+    "stats": {
+      "avgPricePerSqftPaise": 549000,
+      "minPricePerSqftPaise": 480000,
+      "maxPricePerSqftPaise": 620000,
+      "priceChangeLastMonthPct": 8.4,
+      "medianPricePaise": 1080000000,
+      "medianPricePropertyType": "3BHK",
+      "avgRentYieldPct": 3.2,
+      "inventoryLive": { "total": 542, "addedThisWeek": 38 }
+    },
+    "priceTrends": {
+      "historical": [{ "period": "Aug 2023", "price": 4100 }],
+      "growth": { "oneYear": 8.4, "threeYear": 17.2, "fiveYear": 31.8 }
+    },
+    "propertyMix": [{ "type": "3BHK", "percentage": 42, "count": 228 }],
+    "microMarkets": [{ "name": "ITPL", "avgPricePerSqft": 6200, "rentalDemand": "Very High" }],
+    "keyInfrastructure": [{ "name": "ITPL", "category": "Tech Park", "distance": "5 min drive" }],
+    "connectivity": {
+      "metro": [{ "name": "Whitefield Metro Station", "line": "Purple Line", "status": "Operational" }],
+      "airports": [{ "name": "Kempegowda International Airport", "code": "BLR", "distance": "42 km" }],
+      "majorRoads": ["Whitefield Main Road"],
+      "travelTimes": [{ "destination": "ITPL", "time": "15 min" }]
+    },
+    "infrastructureProjects": [{ "name": "Whitefield Metro Phase 2", "category": "Metro", "status": "Operational", "year": 2026, "impact": "High" }],
+    "prosAndCons": { "pros": ["Strong IT employment base"], "cons": ["Peak-hour traffic"] },
+    "investmentScore": { "overall": 8.4, "factors": { "priceGrowth": 8.8, "rentalDemand": 9.1 } },
+    "buyVsRent": { "buyerDemandPct": 76, "sellerDemandPct": 24, "avgRentByBhk": { "2BHK": 32000, "3BHK": 48000 }, "rentalYieldPct": 3.2 },
+    "faqs": [{ "question": "Is Whitefield good for investment?", "answer": "Yes." }],
+    "topVerifiedPicks": [
+      {
+        "badge": "NEW",
+        "bedroomConfig": "3BHK",
+        "project": "Prestige Falcon City",
+        "locality": "Whitefield",
+        "price": 12800000,
+        "area": 1800,
+        "areaUnit": "sqft",
+        "facing": "East",
+        "floorNumber": 4,
+        "totalFloors": 12,
+        "slug": "prestige-falcon-city-..."
+      }
+    ],
+    "dataAsOfDate": "2026-08-24T00:00:00.000Z",
+    "updatedAt": "2026-08-24T00:00:00.000Z"
+  }
+}
+```
+
+Any curated section with no admin-entered data returns `null` (or `[]`/`{total:0,addedThisWeek:0}` for the live sections). `badge` on a pick is `"PREMIUM"` if the listing is admin-featured, `"NEW"` if created within the last 30 days, else `null`. `topVerifiedPicks` only includes `APPROVED` + `isVerified` listings, newest/featured first, capped at 6.
+
+**Errors:** `400` if either query param is missing · `404` no curated locality data found for that city+locality (create one via `POST /api/locality-insights` first).
 
 ---
 
@@ -2418,7 +2512,7 @@ Single locality record by ID.
 
 ### POST /api/locality-insights
 
-Create or update (upsert by city + locality).
+Create or update (upsert by city + locality). `dataAsOfDate` defaults to now if omitted.
 
 **Auth:** ADMIN
 
@@ -2426,18 +2520,38 @@ Create or update (upsert by city + locality).
 
 ```json
 {
-  "city":            "Pune",
-  "locality":        "Baner",
-  "avgPricePerSqft": 25000,
-  "appreciation":    8.5,
-  "connectivity":    "Metro, Highway",
-  "amenities":       "Schools, Hospitals, Malls",
-  "overview":        "Prime residential locality...",
-  "trending":        true
+  "city":                 "Pune",
+  "locality":             "Baner",
+  "avgPricePerSqftPaise": 2500000,
+  "minPricePerSqftPaise": 2200000,
+  "maxPricePerSqftPaise": 2800000,
+  "priceChangeLastMonthPct": 8.5,
+  "nearbyInfra":          ["Metro", "Highway"],
+
+  "subtitle":               "Prime residential locality...",
+  "localityScore":          8.6,
+  "marketStage":            "Mature Growth",
+  "rentalDemand":           "High",
+  "infrastructureStrength": "Strong",
+  "bestFor":                ["IT Professionals", "Families"],
+  "medianPricePaise":       10800000000,
+  "medianPricePropertyType": "3BHK",
+  "avgRentYieldPct":        3.2,
+
+  "priceTrends":            { "historical": [{ "period": "Aug 2023", "price": 4100 }], "growth": { "oneYear": 8.4 } },
+  "propertyMix":            [{ "type": "3BHK", "percentage": 42, "count": 228 }],
+  "microMarkets":           [{ "name": "ITPL", "avgPricePerSqft": 6200, "rentalDemand": "Very High" }],
+  "keyInfrastructure":      [{ "name": "ITPL", "category": "Tech Park", "distance": "5 min drive" }],
+  "connectivity":           { "metro": [{ "name": "Whitefield Metro Station", "line": "Purple Line" }], "majorRoads": ["ITPL Main Road"] },
+  "infrastructureProjects": [{ "name": "Metro Phase 2", "status": "Operational", "year": 2026, "impact": "High" }],
+  "prosAndCons":            { "pros": ["Strong IT employment base"], "cons": ["Peak-hour traffic"] },
+  "investmentScore":        { "overall": 8.4, "factors": { "priceGrowth": 8.8 } },
+  "buyVsRent":              { "buyerDemandPct": 76, "sellerDemandPct": 24, "avgRentByBhk": { "3BHK": 48000 }, "rentalYieldPct": 3.2 },
+  "faqs":                   [{ "question": "Is this locality good for investment?", "answer": "Yes." }]
 }
 ```
 
-`city` and `locality` are required. All other fields are optional.
+`city`, `locality`, and `avgPricePerSqftPaise` are required. Every market-intelligence field (`subtitle` through `faqs`) is optional and independently updatable — send only the fields you're refreshing.
 
 **Response `201`:** `{ "success": true, "message": "Locality insight saved", "data": { ... } }`
 

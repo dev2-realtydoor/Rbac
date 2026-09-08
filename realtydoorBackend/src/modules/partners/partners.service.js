@@ -61,7 +61,7 @@ async function getMyListings(partnerId, status) {
     select: {
       id: true, title: true, slug: true, publishStatus: true, rejectionNote: true,
       propertyType: true, listingType: true, city: true, locality: true,
-      price: true, bhk: true, images: true, createdAt: true,
+      price: true, bhk: true, images: true, createdAt: true, facing: true, furnishing: true,
     },
   });
 }
